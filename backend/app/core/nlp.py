@@ -55,17 +55,34 @@ class NLPProcessor:
         vetores_portfolios = matriz_tfidf[1:]
         
         similaridades = cosine_similarity(vetor_demanda, vetores_portfolios).flatten()
+        feature_names = vectorizer.get_feature_names_out()
+        demanda_array = vetor_demanda.toarray().flatten()
         
         resultados = []
         for i, score in enumerate(similaridades):
             if score > 0:
+                portfolio_array = vetores_portfolios[i].toarray().flatten()
+                
+                intersecao = demanda_array * portfolio_array
+                
+                top_indices = intersecao.argsort()[::-1]
+                
+                termos_comuns = []
+                for idx in top_indices:
+                    if intersecao[idx] > 0:
+                        termos_comuns.append(feature_names[idx])
+                        if len(termos_comuns) == 5:
+                            break
+
                 item_acervo = acervo[i]
                 resultados.append({
                     "expertise_id": item_acervo["expertise_id"],
                     "pesquisador_responsavel": item_acervo["pesquisador_responsavel"],
                     "area_conhecimento": item_acervo["area_conhecimento"],
                     "link_lattes": item_acervo.get("link_lattes"),
-                    "score": round(float(score), 4)
+                    "link_portfolio": item_acervo.get("link_portfolio"),
+                    "score": round(float(score), 4),
+                    "termos_explicativos": termos_comuns # Adicionando os termos no retorno
                 })
                 
         resultados.sort(key=lambda x: x["score"], reverse=True)

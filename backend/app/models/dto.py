@@ -124,7 +124,9 @@ class MatchmakingResult(BaseModel):
     pesquisador_responsavel: str
     area_conhecimento: str
     link_lattes: Optional[str] = None
+    link_portfolio: Optional[str] = None
     score: float
+    termos_explicativos: List[str] = []
 
 class MatchmakingMetrics(BaseModel):
     tempo_execucao_segundos: float

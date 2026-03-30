@@ -74,7 +74,24 @@ const TelaMatchmaking = () => {
                 <td style={{ padding: '10px', fontWeight: 'bold', color: corDestaque }}>{index + 1}º</td>
                 <td style={{ padding: '10px' }}>
                   <strong>{resultado.pesquisador_responsavel}</strong><br/>
-                  <span style={{ fontSize: '12px', color: '#666' }}>{resultado.area_conhecimento}</span>
+                  <span style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '8px' }}>
+                    {resultado.area_conhecimento}
+                  </span>
+                  
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {resultado.termos_explicativos.map((termo, i) => (
+                      <span key={i} style={{ 
+                        backgroundColor: '#e9ecef', 
+                        color: '#495057', 
+                        padding: '2px 6px', 
+                        borderRadius: '4px', 
+                        fontSize: '11px',
+                        border: '1px solid #dee2e6'
+                      }}>
+                        {termo}
+                      </span>
+                    ))}
+                  </div>
                 </td>
                 <td style={{ padding: '10px', textAlign: 'center' }}>
                   <span style={{ 
