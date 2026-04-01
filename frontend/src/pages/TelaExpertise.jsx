@@ -1,6 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import GestaoPortfolio from '../components/GestaoPortfolio';
+import {
+  Container,
+  Typography,
+  Box,
+  TextField,
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Alert,
+  Grid,
+  Tooltip,
+  Badge
+} from '@mui/material';
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  RestoreFromTrash as RestoreIcon,
+  ArrowBack as BackIcon,
+  Inventory as InventoryIcon,
+  FolderOpen as FolderIcon
+} from '@mui/icons-material';
 
 const TelaExpertise = () => {
   const [atores, setAtores] = useState([]);
@@ -11,7 +42,7 @@ const TelaExpertise = () => {
   const [pesquisadorResponsavel, setPesquisadorResponsavel] = useState('');
   const [linkLattes, setLinkLattes] = useState('');
   const [atorId, setAtorId] = useState('');
-  const [mensagem, setMensagem] = useState('');
+  const [mensagem, setMensagem] = useState({ texto: '', tipo: 'info' });
 
   const [editandoId, setEditandoId] = useState(null);
   const [expertiseSelecionada, setExpertiseSelecionada] = useState(null);
@@ -30,7 +61,7 @@ const TelaExpertise = () => {
       const todosAtores = [...resAtivos.data, ...resInativos.data];
       setAtores(todosAtores.filter(a => a.tipo_helice === 'UNIVERSIDADE'));
     } catch (error) {
-      setMensagem('Erro ao carregar atores.');
+      setMensagem({ texto: 'Erro ao carregar atores.', tipo: 'error' });
     }
   };
 
@@ -39,7 +70,7 @@ const TelaExpertise = () => {
       const response = await api.get(`/expertises?mostrar_inativos=${mostrarInativos}`);
       setExpertises(response.data);
     } catch (error) {
-      setMensagem('Erro ao carregar expertises.');
+      setMensagem({ texto: 'Erro ao carregar expertises.', tipo: 'error' });
     }
   };
 
@@ -59,7 +90,7 @@ const TelaExpertise = () => {
     setAreaCnpq(exp.area_cnpq);
     setLinkLattes(exp.link_lattes || '');
     setAtorId(exp.ator_id);
-    setMensagem('');
+    setMensagem({ texto: '', tipo: 'info' });
     setExpertiseSelecionada(null);
   };
 
@@ -76,15 +107,15 @@ const TelaExpertise = () => {
     try {
       if (editandoId) {
         await api.put(`/expertises/${editandoId}`, payload);
-        setMensagem('Investigador atualizado com sucesso!');
+        setMensagem({ texto: 'Investigador atualizado com sucesso!', tipo: 'success' });
       } else {
         await api.post('/expertises', payload);
-        setMensagem('Investigador registado com sucesso!');
+        setMensagem({ texto: 'Investigador registado com sucesso!', tipo: 'success' });
       }
       limparFormulario();
       carregarExpertises();
     } catch (error) {
-      setMensagem(error.response?.data?.detail || 'Erro ao guardar a expertise.');
+      setMensagem({ texto: error.response?.data?.detail || 'Erro ao guardar a expertise.', tipo: 'error' });
     }
   };
 
@@ -92,11 +123,11 @@ const TelaExpertise = () => {
     if (window.confirm('Deseja realmente inativar este investigador? Todos os trabalhos do portfólio serão ocultados (Exclusão em Cascata).')) {
       try {
         await api.put(`/expertises/${id}`, { is_deleted: true });
-        setMensagem('Investigador inativado com sucesso!');
+        setMensagem({ texto: 'Investigador inativado com sucesso!', tipo: 'success' });
         if (expertiseSelecionada === id) setExpertiseSelecionada(null);
         carregarExpertises();
       } catch (error) {
-        setMensagem('Erro ao inativar investigador.');
+        setMensagem({ texto: 'Erro ao inativar investigador.', tipo: 'error' });
       }
     }
   };
@@ -105,133 +136,192 @@ const TelaExpertise = () => {
     if (window.confirm('Deseja restaurar este investigador?')) {
       try {
         await api.put(`/expertises/${id}`, { is_deleted: false });
-        setMensagem('Investigador restaurado com sucesso!');
+        setMensagem({ texto: 'Investigador restaurado com sucesso!', tipo: 'success' });
         carregarExpertises();
       } catch (error) {
-        setMensagem('Erro ao restaurar investigador.');
+        setMensagem({ texto: 'Erro ao restaurar investigador.', tipo: 'error' });
       }
     }
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '1100px', margin: '0 auto' }}>
-      <h2>Catálogo de Investigadores (Expertises)</h2>
-      
-      {mensagem && <div style={{ padding: '10px', backgroundColor: '#e2e3e5', marginBottom: '15px' }}>{mensagem}</div>}
-
-      <div style={{ marginBottom: '20px' }}>
-        <button 
+    <Container maxWidth="xl">
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 800, color: 'text.primary' }}>
+          Catálogo de Investigadores
+        </Typography>
+        <Button
+          variant="outlined"
+          color={mostrarInativos ? "secondary" : "warning"}
+          startIcon={mostrarInativos ? <BackIcon /> : <InventoryIcon />}
           onClick={() => {
             setMostrarInativos(!mostrarInativos);
             setExpertiseSelecionada(null);
             limparFormulario();
           }}
-          style={{ 
-            padding: '10px 15px', 
-            backgroundColor: mostrarInativos ? '#6c757d' : '#ffc107', 
-            color: mostrarInativos ? 'white' : 'black',
-            border: 'none', 
-            borderRadius: '5px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
         >
-          {mostrarInativos ? '← Voltar para Investigadores Ativos' : 'Ver Lixeira (Investigadores Arquivados)'}
-        </button>
-      </div>
+          {mostrarInativos ? 'Voltar' : 'Ver Lixeira'}
+        </Button>
+      </Box>
 
-      <div style={{ display: 'flex', gap: '30px', alignItems: 'flex-start' }}>
-        <div style={{ flex: expertiseSelecionada ? '0 0 55%' : '1', transition: 'all 0.3s' }}>
+      {mensagem.texto && (
+        <Alert severity={mensagem.tipo} sx={{ mb: 3 }} onClose={() => setMensagem({ texto: '', tipo: 'info' })}>
+          {mensagem.texto}
+        </Alert>
+      )}
+
+      <Grid container spacing={4}>
+        <Grid item xs={12} md={expertiseSelecionada && !mostrarInativos ? 7 : 12} sx={{ transition: 'all 0.3s ease-in-out' }}>
           
           {!mostrarInativos && (
-            <form onSubmit={salvarExpertise} style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap', backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '5px' }}>
-              <input type="text" placeholder="Nome do Investigador" value={pesquisadorResponsavel} onChange={(e) => setPesquisadorResponsavel(e.target.value)} required style={{ flex: '1 1 45%', padding: '8px' }} />
-              <select value={atorId} onChange={(e) => setAtorId(e.target.value)} required style={{ flex: '1 1 45%', padding: '8px' }}>
-                <option value="" disabled>Selecione a Universidade...</option>
-                {atores.map(a => (
-                  <option key={a.id} value={a.id}>
-                    {a.nome} {a.is_deleted ? ' - (ARQUIVADO)' : ''}
-                  </option>
-                ))}
-              </select>
-              <input type="text" placeholder="Área de Conhecimento" value={areaConhecimento} onChange={(e) => setAreaConhecimento(e.target.value)} required style={{ flex: '1 1 45%', padding: '8px' }} />
-              <input type="text" placeholder="Área CNPq" value={areaCnpq} onChange={(e) => setAreaCnpq(e.target.value)} required style={{ flex: '1 1 45%', padding: '8px' }} />
-              <input type="url" placeholder="Link do Currículo Lattes (Opcional)" value={linkLattes} onChange={(e) => setLinkLattes(e.target.value)} style={{ flex: '1 1 100%', padding: '8px' }} />
-              
-              <div style={{ flex: '1 1 100%', display: 'flex', gap: '10px' }}>
-                <button type="submit" style={{ flex: 1, padding: '10px', backgroundColor: '#28a745', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
-                  {editandoId ? 'Atualizar Investigador' : 'Registar Investigador'}
-                </button>
-                {editandoId && (
-                  <button type="button" onClick={limparFormulario} style={{ flex: 1, padding: '10px', backgroundColor: '#6c757d', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
-                    Cancelar
-                  </button>
-                )}
-              </div>
-            </form>
+            <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>
+                {editandoId ? 'Editar Investigador' : 'Registar Novo Investigador'}
+              </Typography>
+              <Box component="form" onSubmit={salvarExpertise}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Nome do Investigador"
+                      fullWidth
+                      value={pesquisadorResponsavel}
+                      onChange={(e) => setPesquisadorResponsavel(e.target.value)}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth required>
+                      <InputLabel>Universidade</InputLabel>
+                      <Select
+                        value={atorId}
+                        label="Universidade"
+                        onChange={(e) => setAtorId(e.target.value)}
+                      >
+                        <MenuItem value="" disabled>Selecione a Universidade...</MenuItem>
+                        {atores.map(a => (
+                          <MenuItem key={a.id} value={a.id}>
+                            {a.nome} {a.is_deleted ? ' - (ARQUIVADO)' : ''}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Área de Conhecimento"
+                      fullWidth
+                      value={areaConhecimento}
+                      onChange={(e) => setAreaConhecimento(e.target.value)}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Área CNPq"
+                      fullWidth
+                      value={areaCnpq}
+                      onChange={(e) => setAreaCnpq(e.target.value)}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Link do Currículo Lattes (Opcional)"
+                      type="url"
+                      fullWidth
+                      value={linkLattes}
+                      onChange={(e) => setLinkLattes(e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sx={{ display: 'flex', gap: 2, mt: 1 }}>
+                    <Button type="submit" variant="contained" color="success" size="large">
+                      {editandoId ? 'Atualizar Investigador' : 'Registar Investigador'}
+                    </Button>
+                    {editandoId && (
+                      <Button variant="text" color="secondary" onClick={limparFormulario}>
+                        Cancelar
+                      </Button>
+                    )}
+                  </Grid>
+                </Grid>
+              </Box>
+            </Paper>
           )}
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', boxShadow: '0 0 5px rgba(0,0,0,0.1)' }}>
-            <thead style={{ backgroundColor: '#0056b3', color: 'white' }}>
-              <tr>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Investigador</th>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Área</th>
-                <th style={{ padding: '10px', textAlign: 'center' }}>Trabalhos</th>
-                <th style={{ padding: '10px', textAlign: 'center' }}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {expertises.map(exp => (
-                <tr key={exp.id} style={{ borderBottom: '1px solid #ddd', backgroundColor: expertiseSelecionada === exp.id ? '#e9ecef' : 'white' }}>
-                  <td style={{ padding: '10px' }}>{exp.pesquisador_responsavel}</td>
-                  <td style={{ padding: '10px' }}>{exp.area_conhecimento}</td>
-                  <td style={{ padding: '10px', textAlign: 'center' }}>{exp.portfolios?.length || 0}</td>
-                  <td style={{ padding: '10px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '5px' }}>
-                    {mostrarInativos ? (
-                      <button 
-                        onClick={() => restaurarExpertise(exp.id)} 
-                        style={{ padding: '5px 10px', backgroundColor: '#28a745', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '3px' }}
-                      >
-                        Restaurar
-                      </button>
-                    ) : (
-                      <>
-                        <button onClick={() => prepararEdicao(exp)} style={{ padding: '5px 10px', backgroundColor: '#ffc107', color: 'black', border: 'none', cursor: 'pointer', borderRadius: '3px' }}>
-                          Editar
-                        </button>
-                        <button onClick={() => setExpertiseSelecionada(exp.id)} style={{ padding: '5px 10px', backgroundColor: '#17a2b8', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '3px' }}>
-                          Abrir Portfólio
-                        </button>
-                        <button onClick={() => inativarExpertise(exp.id)} style={{ padding: '5px 10px', backgroundColor: '#dc3545', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '3px' }}>
-                          Inativar
-                        </button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {expertises.length === 0 && (
-                <tr>
-                  <td colSpan="4" style={{ padding: '10px', textAlign: 'center' }}>
-                    {mostrarInativos ? 'Nenhum investigador arquivado encontrado.' : 'Nenhum investigador ativo encontrado.'}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+          <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+            <Table>
+              <TableHead sx={{ backgroundColor: '#f8fafc' }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Investigador</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Área</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>Trabalhos</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>Ações</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {expertises.map(exp => (
+                  <TableRow 
+                    key={exp.id} 
+                    hover 
+                    sx={{ backgroundColor: expertiseSelecionada === exp.id ? '#f1f5f9' : 'inherit' }}
+                  >
+                    <TableCell sx={{ fontWeight: 500 }}>{exp.pesquisador_responsavel}</TableCell>
+                    <TableCell>{exp.area_conhecimento}</TableCell>
+                    <TableCell align="center">
+                      <Badge badgeContent={exp.portfolios?.length || 0} color="primary" showZero />
+                    </TableCell>
+                    <TableCell align="center">
+                      {mostrarInativos ? (
+                        <Tooltip title="Restaurar">
+                          <IconButton color="success" onClick={() => restaurarExpertise(exp.id)}>
+                            <RestoreIcon />
+                          </IconButton>
+                        </Tooltip>
+                      ) : (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                          <Tooltip title="Editar">
+                            <IconButton color="primary" onClick={() => prepararEdicao(exp)}>
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Abrir Portfólio">
+                            <IconButton color="info" onClick={() => setExpertiseSelecionada(exp.id)}>
+                              <FolderIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Inativar">
+                            <IconButton color="error" onClick={() => inativarExpertise(exp.id)}>
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {expertises.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                      {mostrarInativos ? 'Nenhum investigador arquivado encontrado.' : 'Nenhum investigador ativo encontrado.'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Grid>
 
         {expertiseSelecionada && !mostrarInativos && (
-          <div style={{ flex: '0 0 40%' }}>
+          <Grid item xs={12} md={5}>
             <GestaoPortfolio 
               expertiseId={expertiseSelecionada} 
               onClose={() => setExpertiseSelecionada(null)}
               onAtualizar={carregarExpertises}
             />
-          </div>
+          </Grid>
         )}
-      </div>
-    </div>
+      </Grid>
+    </Container>
   );
 };
 
