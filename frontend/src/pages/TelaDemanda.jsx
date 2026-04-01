@@ -1,5 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import {
+  Container,
+  Typography,
+  Box,
+  TextField,
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Alert,
+  Grid,
+  Tooltip
+} from '@mui/material';
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  RestoreFromTrash as RestoreIcon,
+  ArrowBack as BackIcon,
+  Inventory as InventoryIcon
+} from '@mui/icons-material';
 
 const TelaDemanda = () => {
   const [demandas, setDemandas] = useState([]);
@@ -9,7 +38,7 @@ const TelaDemanda = () => {
   const [atorId, setAtorId] = useState('');
   const [areaCnpq, setAreaCnpq] = useState('');
   const [editandoId, setEditandoId] = useState(null);
-  const [mensagem, setMensagem] = useState('');
+  const [mensagem, setMensagem] = useState({ texto: '', tipo: 'info' });
   const [mostrarInativos, setMostrarInativos] = useState(false);
 
   useEffect(() => {
@@ -22,7 +51,7 @@ const TelaDemanda = () => {
       const response = await api.get(`/demandas?mostrar_inativos=${mostrarInativos}`);
       setDemandas(response.data);
     } catch (error) {
-      setMensagem('Erro ao carregar as demandas.');
+      setMensagem({ texto: 'Erro ao carregar as demandas.', tipo: 'error' });
     }
   };
 
@@ -30,10 +59,9 @@ const TelaDemanda = () => {
     try {
       const resAtivos = await api.get('/atores');
       const resInativos = await api.get('/atores?mostrar_inativos=true');
-      
       setAtores([...resAtivos.data, ...resInativos.data]);
     } catch (error) {
-      setMensagem('Erro ao carregar os atores.');
+      setMensagem({ texto: 'Erro ao carregar os atores.', tipo: 'error' });
     }
   };
 
@@ -49,15 +77,15 @@ const TelaDemanda = () => {
 
       if (editandoId) {
         await api.put(`/demandas/${editandoId}`, payload);
-        setMensagem('Demanda atualizada com sucesso!');
+        setMensagem({ texto: 'Demanda atualizada com sucesso!', tipo: 'success' });
       } else {
         await api.post('/demandas', payload);
-        setMensagem('Demanda registada com sucesso!');
+        setMensagem({ texto: 'Demanda registada com sucesso!', tipo: 'success' });
       }
       limparFormulario();
       carregarDemandas();
     } catch (error) {
-      setMensagem(error.response?.data?.detail || 'Erro ao guardar a demanda.');
+      setMensagem({ texto: error.response?.data?.detail || 'Erro ao guardar a demanda.', tipo: 'error' });
     }
   };
 
@@ -67,17 +95,17 @@ const TelaDemanda = () => {
     setDescricao(demanda.descricao);
     setAtorId(demanda.ator_id);
     setAreaCnpq(demanda.area_cnpq);
-    setMensagem('');
+    setMensagem({ texto: '', tipo: 'info' });
   };
 
   const inativarDemanda = async (id) => {
     if (window.confirm('Deseja realmente inativar esta demanda?')) {
       try {
         await api.put(`/demandas/${id}`, { is_deleted: true });
-        setMensagem('Demanda inativada com sucesso!');
+        setMensagem({ texto: 'Demanda inativada com sucesso!', tipo: 'success' });
         carregarDemandas();
       } catch (error) {
-        setMensagem('Erro ao inativar a demanda.');
+        setMensagem({ texto: 'Erro ao inativar a demanda.', tipo: 'error' });
       }
     }
   };
@@ -86,10 +114,10 @@ const TelaDemanda = () => {
     if (window.confirm('Deseja realmente restaurar esta demanda?')) {
       try {
         await api.put(`/demandas/${id}`, { is_deleted: false });
-        setMensagem('Demanda restaurada com sucesso!');
+        setMensagem({ texto: 'Demanda restaurada com sucesso!', tipo: 'success' });
         carregarDemandas();
       } catch (error) {
-        setMensagem('Erro ao restaurar a demanda.');
+        setMensagem({ texto: 'Erro ao restaurar a demanda.', tipo: 'error' });
       }
     }
   };
@@ -103,137 +131,147 @@ const TelaDemanda = () => {
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '900px', margin: '0 auto' }}>
-      <h2>Gestão de Demandas (Problemas e Oportunidades)</h2>
-      
-      {mensagem && <div style={{ padding: '10px', backgroundColor: '#e2e3e5', marginBottom: '15px' }}>{mensagem}</div>}
-
-      <div style={{ marginBottom: '20px' }}>
-        <button 
+    <Container maxWidth="lg">
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 800, color: 'text.primary' }}>
+          Gestão de Demandas
+        </Typography>
+        <Button
+          variant="outlined"
+          color={mostrarInativos ? "secondary" : "warning"}
+          startIcon={mostrarInativos ? <BackIcon /> : <InventoryIcon />}
           onClick={() => setMostrarInativos(!mostrarInativos)}
-          style={{ 
-            padding: '10px 15px', 
-            backgroundColor: mostrarInativos ? '#6c757d' : '#ffc107', 
-            color: mostrarInativos ? 'white' : 'black',
-            border: 'none', 
-            borderRadius: '5px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
         >
-          {mostrarInativos ? '← Voltar para Demandas Ativas' : 'Ver Lixeira (Demandas Arquivadas)'}
-        </button>
-      </div>
+          {mostrarInativos ? 'Voltar' : 'Ver Lixeira'}
+        </Button>
+      </Box>
 
-      {!mostrarInativos && (
-        <form onSubmit={salvarDemanda} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '30px' }}>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <div style={{ flex: 2 }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Título da Demanda:</label>
-              <input 
-                type="text" 
-                value={titulo} 
-                onChange={(e) => setTitulo(e.target.value)} 
-                required 
-                style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Área CNPq:</label>
-              <input 
-                type="text" 
-                value={areaCnpq} 
-                onChange={(e) => setAreaCnpq(e.target.value)} 
-                required 
-                placeholder="Ex: 1.03.00.00-7"
-                style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: '5px' }}>Ator Vinculado (Indústria/Governo):</label>
-            <select 
-              value={atorId} 
-              onChange={(e) => setAtorId(e.target.value)}
-              required
-              style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-            >
-              <option value="" disabled>Selecione um ator...</option>
-              {atores.map(ator => (
-                <option key={ator.id} value={ator.id}>
-                  {ator.nome} ({ator.tipo_helice}) {ator.is_deleted ? ' - (ARQUIVADO)' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: '5px' }}>Descrição Detalhada:</label>
-            <textarea 
-              value={descricao} 
-              onChange={(e) => setDescricao(e.target.value)} 
-              required 
-              rows="5"
-              style={{ width: '100%', padding: '8px', boxSizing: 'border-box', resize: 'vertical' }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button type="submit" style={{ padding: '9px 15px', backgroundColor: '#28a745', color: 'white', border: 'none', cursor: 'pointer' }}>
-              {editandoId ? 'Atualizar Demanda' : 'Registar Demanda'}
-            </button>
-            {editandoId && (
-              <button type="button" onClick={limparFormulario} style={{ padding: '9px 15px', backgroundColor: '#6c757d', color: 'white', border: 'none', cursor: 'pointer' }}>
-                Cancelar
-              </button>
-            )}
-          </div>
-        </form>
+      {mensagem.texto && (
+        <Alert severity={mensagem.tipo} sx={{ mb: 3 }} onClose={() => setMensagem({ texto: '', tipo: 'info' })}>
+          {mensagem.texto}
+        </Alert>
       )}
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f8f9fa', textAlign: 'left' }}>
-            <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>ID</th>
-            <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>Título</th>
-            <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>Área CNPq</th>
-            <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {demandas.map(demanda => (
-            <tr key={demanda.id}>
-              <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{demanda.id}</td>
-              <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{demanda.titulo}</td>
-              <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{demanda.area_cnpq}</td>
-              <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                {mostrarInativos ? (
-                  <button 
-                    onClick={() => restaurarDemanda(demanda.id)} 
-                    style={{ backgroundColor: '#28a745', color: 'white', padding: '5px 10px', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+      {!mostrarInativos && (
+        <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+          <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>
+            {editandoId ? 'Editar Problema ou Oportunidade' : 'Registar Nova Demanda'}
+          </Typography>
+          <Box component="form" onSubmit={salvarDemanda}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={8}>
+                <TextField
+                  label="Título da Demanda"
+                  fullWidth
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Área CNPq"
+                  fullWidth
+                  placeholder="Ex: 1.03.00.00-7"
+                  value={areaCnpq}
+                  onChange={(e) => setAreaCnpq(e.target.value)}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel>Ator Vinculado (Indústria/Governo)</InputLabel>
+                  <Select
+                    value={atorId}
+                    label="Ator Vinculado (Indústria/Governo)"
+                    onChange={(e) => setAtorId(e.target.value)}
                   >
-                    Restaurar
-                  </button>
-                ) : (
-                  <>
-                    <button onClick={() => prepararEdicao(demanda)} style={{ marginRight: '5px', padding: '5px 10px', cursor: 'pointer' }}>Editar</button>
-                    <button onClick={() => inativarDemanda(demanda.id)} style={{ padding: '5px 10px', backgroundColor: '#dc3545', color: 'white', border: 'none', cursor: 'pointer' }}>Inativar</button>
-                  </>
+                    <MenuItem value="" disabled>Selecione um ator...</MenuItem>
+                    {atores.map(ator => (
+                      <MenuItem key={ator.id} value={ator.id}>
+                        {ator.nome} ({ator.tipo_helice}) {ator.is_deleted ? ' - (ARQUIVADO)' : ''}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Descrição Detalhada"
+                  fullWidth
+                  multiline
+                  rows={4}
+                  value={descricao}
+                  onChange={(e) => setDescricao(e.target.value)}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sx={{ display: 'flex', gap: 2, mt: 1 }}>
+                <Button type="submit" variant="contained" color="success" size="large">
+                  {editandoId ? 'Atualizar Dados' : 'Registar Demanda'}
+                </Button>
+                {editandoId && (
+                  <Button variant="text" color="secondary" onClick={limparFormulario}>
+                    Cancelar
+                  </Button>
                 )}
-              </td>
-            </tr>
-          ))}
-          {demandas.length === 0 && (
-            <tr>
-              <td colSpan="4" style={{ padding: '10px', textAlign: 'center' }}>
-                {mostrarInativos ? 'Nenhuma demanda arquivada encontrada.' : 'Nenhuma demanda ativa encontrada.'}
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+              </Grid>
+            </Grid>
+          </Box>
+        </Paper>
+      )}
+
+      <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+        <Table>
+          <TableHead sx={{ backgroundColor: '#f8fafc' }}>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Título</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Área CNPq</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 'bold' }}>Ações</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {demandas.map(demanda => (
+              <TableRow key={demanda.id} hover>
+                <TableCell>#{demanda.id}</TableCell>
+                <TableCell sx={{ fontWeight: 500 }}>{demanda.titulo}</TableCell>
+                <TableCell>{demanda.area_cnpq}</TableCell>
+                <TableCell align="center">
+                  {mostrarInativos ? (
+                    <Tooltip title="Restaurar">
+                      <IconButton color="success" onClick={() => restaurarDemanda(demanda.id)}>
+                        <RestoreIcon />
+                      </IconButton>
+                    </Tooltip>
+                  ) : (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                      <Tooltip title="Editar">
+                        <IconButton color="primary" onClick={() => prepararEdicao(demanda)}>
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Inativar">
+                        <IconButton color="error" onClick={() => inativarDemanda(demanda.id)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+            {demandas.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                  {mostrarInativos ? 'Nenhuma demanda arquivada.' : 'Nenhuma demanda ativa encontrada.'}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Container>
   );
 };
 
