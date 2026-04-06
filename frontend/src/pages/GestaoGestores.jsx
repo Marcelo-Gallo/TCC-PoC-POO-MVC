@@ -7,7 +7,7 @@ import {
   TableContainer, TableHead, TableRow, Paper, IconButton, Alert, Grid, Chip,
   Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
 } from '@mui/material';
-import { Delete as DeleteIcon, Key as KeyIcon, Shield as ShieldIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Key as KeyIcon, Shield as ShieldIcon, SettingsBackupRestore as RestoreIcon } from '@mui/icons-material';
 
 const GestaoGestores = () => {
   const navigate = useNavigate();
@@ -20,6 +20,7 @@ const GestaoGestores = () => {
   const [senha, setSenha] = useState('');
 
   const [modalAberto, setModalAberto] = useState(false);
+  const [modalRestaurarAberto, setModalRestaurarAberto] = useState(false);
   const [gestorAlvo, setGestorAlvo] = useState(null);
 
   useEffect(() => {
@@ -43,7 +44,24 @@ const GestaoGestores = () => {
       setNome(''); setEmail(''); setSenha('');
       carregarGestores();
     } catch (error) {
-      setMensagem({ texto: error.response?.data?.detail || 'Erro ao cadastrar.', tipo: 'error' });
+      if (error.response?.status === 409 && error.response?.data?.detail === 'USER_ARCHIVED') {
+        setModalRestaurarAberto(true);
+      } else {
+        setMensagem({ texto: error.response?.data?.detail || 'Erro ao cadastrar.', tipo: 'error' });
+      }
+    }
+  };
+
+  const confirmarRestauracao = async () => {
+    try {
+      await api.put('/gestores/restaurar', { email, novo_nome: nome, nova_senha: senha });
+      setMensagem({ texto: 'Conta reativada com sucesso!', tipo: 'success' });
+      setModalRestaurarAberto(false);
+      setNome(''); setEmail(''); setSenha('');
+      carregarGestores();
+    } catch (error) {
+      setMensagem({ texto: error.response?.data?.detail || 'Erro ao restaurar.', tipo: 'error' });
+      setModalRestaurarAberto(false);
     }
   };
 
@@ -184,6 +202,32 @@ const GestaoGestores = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Modal de Restauração de Conta Arquivada */}
+      <Dialog open={modalRestaurarAberto} onClose={() => setModalRestaurarAberto(false)}>
+        <DialogTitle sx={{ fontWeight: 'bold', color: 'warning.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <RestoreIcon /> Conta Inativa Detectada
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: 'text.primary', mb: 2 }}>
+            O e-mail <strong>{email}</strong> já está registrado em nossa base, mas encontra-se arquivado (excluído).
+          </DialogContentText>
+          <DialogContentText>
+            Deseja reativar o acesso desta conta? O sistema aplicará os dados que você acabou de digitar:
+          </DialogContentText>
+          <Box sx={{ mt: 2, p: 2, bgcolor: '#f8fafc', borderRadius: 1 }}>
+            <Typography variant="body2"><strong>Novo Nome:</strong> {nome}</Typography>
+            <Typography variant="body2"><strong>Nova Senha Temporária:</strong> {senha.replace(/./g, '*')}</Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button onClick={() => setModalRestaurarAberto(false)} color="inherit" variant="text">Cancelar</Button>
+          <Button onClick={confirmarRestauracao} color="warning" variant="contained" sx={{ fontWeight: 'bold' }}>
+            Reativar Conta
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
     </Container>
   );
 };

@@ -136,3 +136,8 @@ class MatchmakingMetrics(BaseModel):
 class MatchmakingResponse(BaseModel):
     stemming: MatchmakingMetrics
     lematizacao: MatchmakingMetrics
+
+class GestorRestore(BaseModel):
+    email: EmailStr
+    novo_nome: str
+    nova_senha: str
