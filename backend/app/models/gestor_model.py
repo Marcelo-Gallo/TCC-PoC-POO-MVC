@@ -18,6 +18,16 @@ class GestorModel:
         return [dict(row._mapping) for row in results]
 
     def criar_gestor(self, gestor_data: dto.GestorCreate):
+        query_check = text("SELECT is_deleted FROM gestor WHERE email = :email")
+        existing = self.db.execute(query_check, {"email": gestor_data.email}).fetchone()
+        
+        if existing:
+            if existing._mapping["is_deleted"]:
+                # Se está deletado, disparamos a flag para o frontend
+                raise ValueError("USER_ARCHIVED")
+            else:
+                raise ValueError("Este e-mail já está em uso por um gestor ativo.")
+
         senha_hash = get_password_hash(gestor_data.senha)
         try:
             query = text("""
@@ -32,9 +42,32 @@ class GestorModel:
             })
             self.db.commit()
             return dict(result.fetchone()._mapping)
-        except Exception:
+        except Exception as e:
             self.db.rollback()
-            raise ValueError("Erro ao cadastrar: este e-mail já pode estar em uso.")
+            raise ValueError("Erro interno ao cadastrar o gestor.")
+
+    def restaurar_gestor(self, restore_data: dto.GestorRestore):
+        senha_hash = get_password_hash(restore_data.nova_senha)
+        try:
+            query = text("""
+                UPDATE gestor 
+                SET nome = :nome, senha_hash = :senha_hash, is_deleted = false 
+                WHERE email = :email AND is_deleted = true
+                RETURNING id, nome, email, is_master, is_deleted
+            """)
+            result = self.db.execute(query, {
+                "nome": restore_data.novo_nome,
+                "senha_hash": senha_hash,
+                "email": restore_data.email
+            })
+            self.db.commit()
+            res = result.fetchone()
+            if not res:
+                raise ValueError("Gestor não encontrado na lixeira ou já está ativo.")
+            return dict(res._mapping)
+        except Exception as e:
+            self.db.rollback()
+            raise ValueError(str(e))
 
     def transferir_master(self, email_atual: str, novo_master_id: int):
         query_verificacao = text("SELECT id, is_master FROM gestor WHERE email = :email")

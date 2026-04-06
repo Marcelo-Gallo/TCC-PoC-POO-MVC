@@ -29,6 +29,21 @@ def criar_gestor(
     try:
         return model.criar_gestor(gestor_in)
     except ValueError as e:
+        if str(e) == "USER_ARCHIVED":
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="USER_ARCHIVED")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@gestor_controller.put("/restaurar", response_model=dto.GestorResponse)
+def restaurar_gestor(
+    restore_in: dto.GestorRestore, 
+    model: GestorModel = Depends(get_gestor_model), 
+    current_user: dict = Depends(get_current_user)
+):
+    if not current_user.get("is_master"):
+        raise HTTPException(status_code=403, detail="Acesso negado: Apenas o Administrador Master pode restaurar contas.")
+    try:
+        return model.restaurar_gestor(restore_in)
+    except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @gestor_controller.post("/{novo_master_id}/transferir-master")
