@@ -9,7 +9,7 @@ class GestorModel:
 
     def listar_gestores(self):
         query = text("""
-            SELECT id, nome, email, is_master, is_deleted 
+            SELECT id, nome, email, is_master, primeiro_login, is_deleted 
             FROM gestor 
             WHERE is_deleted = false 
             ORDER BY is_master DESC, nome ASC
