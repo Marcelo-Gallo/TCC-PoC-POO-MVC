@@ -1,5 +1,8 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.controllers import gestor_controller
+import seed
 
 from app.controllers import (
     auth_controller,
@@ -9,10 +12,17 @@ from app.controllers import (
     matchmaking_controller
 )
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Iniciando a API e verificando o banco de dados...")
+    seed.seed_data()
+    yield
+
 app = FastAPI(
     title="API Matchmaking Tríplice Hélice",
     description="Módulo de corretagem digital de inovação para gestão municipal. (Refatorado para POO/MVC)",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 app.add_middleware(
@@ -28,3 +38,4 @@ app.include_router(ator_controller.ator_controller)
 app.include_router(demanda_controller.demanda_controller)
 app.include_router(expertise_controller.expertise_controller)
 app.include_router(matchmaking_controller.matchmaking_controller)
+app.include_router(gestor_controller.gestor_controller)

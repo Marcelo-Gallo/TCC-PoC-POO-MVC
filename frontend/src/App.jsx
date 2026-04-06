@@ -10,6 +10,7 @@ import TelaDemanda from './pages/TelaDemanda';
 import TelaExpertise from './pages/TelaExpertise';
 import TelaMatchmaking from './pages/TelaMatchmaking';
 import Layout from './components/Layout';
+import GestaoGestores from './pages/GestaoGestores';
 
 const PrivateRoute = ({ children }) => {
   const isAuthenticated = !!localStorage.getItem('token');
@@ -29,6 +30,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<TelaLogin />} />
+          <Route path="/gestores" element={<PrivateRoute><GestaoGestores /></PrivateRoute>} />
           <Route path="/atores" element={<PrivateRoute><GestaoAtores /></PrivateRoute>} />
           <Route path="/demandas" element={<PrivateRoute><TelaDemanda /></PrivateRoute>} />
           <Route path="/expertises" element={<PrivateRoute><TelaExpertise /></PrivateRoute>} />

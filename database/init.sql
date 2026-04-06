@@ -3,6 +3,7 @@ CREATE TABLE gestor (
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     senha_hash VARCHAR(255) NOT NULL,
+    is_master BOOLEAN DEFAULT FALSE,
     is_deleted BOOLEAN DEFAULT FALSE
 );
 
