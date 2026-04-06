@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import {
   Container,
@@ -38,6 +38,8 @@ const GestaoAtores = () => {
   const [mensagem, setMensagem] = useState({ texto: '', tipo: 'info' });
   const [mostrarInativos, setMostrarInativos] = useState(false);
 
+  const formRef = useRef(null);
+
   useEffect(() => {
     carregarAtores();
   }, [mostrarInativos]);
@@ -73,6 +75,7 @@ const GestaoAtores = () => {
     setNome(ator.nome);
     setTipoHelice(ator.tipo_helice);
     setMensagem({ texto: '', tipo: 'info' });
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const inativarAtor = async (id) => {
@@ -106,7 +109,7 @@ const GestaoAtores = () => {
   };
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 800, color: 'text.primary' }}>
           Gestão do Ecossistema (Tríplice Hélice)
@@ -127,14 +130,14 @@ const GestaoAtores = () => {
         </Alert>
       )}
 
-      {!mostrarInativos && (
-        <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>
-            {editandoId ? 'Editar Instituição/Empresa' : 'Cadastrar Novo Ator'}
-          </Typography>
-          <Box component="form" onSubmit={salvarAtor}>
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} md={6}>
+      <Grid container spacing={4} alignItems="flex-start">
+        <Grid item xs={12} md={4} ref={formRef}>
+          {!mostrarInativos ? (
+            <Paper sx={{ p: 3, borderRadius: 2, position: 'sticky', top: '100px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>
+                {editandoId ? 'Editar Instituição/Empresa' : 'Cadastrar Novo Ator'}
+              </Typography>
+              <Box component="form" onSubmit={salvarAtor} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <TextField
                   label="Nome da Instituição/Empresa"
                   fullWidth
@@ -142,8 +145,6 @@ const GestaoAtores = () => {
                   onChange={(e) => setNome(e.target.value)}
                   required
                 />
-              </Grid>
-              <Grid item xs={12} md={4}>
                 <FormControl fullWidth required>
                   <InputLabel>Tipo de Hélice</InputLabel>
                   <Select
@@ -156,85 +157,94 @@ const GestaoAtores = () => {
                     <MenuItem value="GOVERNO">Governo</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
-              <Grid item xs={12} md={2} sx={{ display: 'flex', gap: 1 }}>
-                <Button type="submit" variant="contained" color="success" fullWidth sx={{ height: '56px' }}>
-                  {editandoId ? 'Atualizar' : 'Cadastrar'}
-                </Button>
-              </Grid>
-            </Grid>
-            {editandoId && (
-              <Box sx={{ mt: 2 }}>
-                <Button variant="text" color="secondary" onClick={limparFormulario}>
-                  Cancelar Edição
-                </Button>
-              </Box>
-            )}
-          </Box>
-        </Paper>
-      )}
-
-      <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-        <Table>
-          <TableHead sx={{ backgroundColor: '#f8fafc' }}>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Nome</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Hélice</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 'bold' }}>Ações</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {atores.map(ator => (
-              <TableRow key={ator.id} hover>
-                <TableCell>#{ator.id}</TableCell>
-                <TableCell sx={{ fontWeight: 500 }}>{ator.nome}</TableCell>
-                <TableCell>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontWeight: 'bold',
-                      color: ator.tipo_helice === 'UNIVERSIDADE' ? '#0ea5e9' : 
-                             ator.tipo_helice === 'INDUSTRIA' ? '#f59e0b' : '#10b981'
-                    }}
-                  >
-                    {ator.tipo_helice}
-                  </Typography>
-                </TableCell>
-                <TableCell align="center">
-                  {mostrarInativos ? (
-                    <Tooltip title="Restaurar">
-                      <IconButton color="success" onClick={() => restaurarAtor(ator.id)}>
-                        <RestoreIcon />
-                      </IconButton>
-                    </Tooltip>
-                  ) : (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                      <Tooltip title="Editar">
-                        <IconButton color="primary" onClick={() => prepararEdicao(ator)}>
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Inativar">
-                        <IconButton color="error" onClick={() => inativarAtor(ator.id)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+                <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+                  <Button type="submit" variant="contained" color="success" fullWidth sx={{ height: '56px' }}>
+                    {editandoId ? 'Atualizar' : 'Cadastrar'}
+                  </Button>
+                  {editandoId && (
+                    <Button variant="outlined" color="secondary" onClick={limparFormulario} fullWidth sx={{ height: '56px' }}>
+                      Cancelar
+                    </Button>
                   )}
-                </TableCell>
-              </TableRow>
-            ))}
-            {atores.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                  {mostrarInativos ? 'Nenhum ator arquivado encontrado.' : 'Nenhum ator ativo encontrado.'}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                </Box>
+              </Box>
+            </Paper>
+          ) : (
+             <Paper sx={{ p: 3, borderRadius: 2, backgroundColor: '#fef2f2', border: '1px solid #fca5a5' }}>
+                <Typography variant="h6" color="error" sx={{ fontWeight: 700 }}>
+                  Modo Lixeira
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Você está visualizando os registros inativos. Restaure um ator na tabela ao lado para poder editá-lo novamente.
+                </Typography>
+             </Paper>
+          )}
+        </Grid>
+
+        <Grid item xs={12} md={8}>
+          <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+            <Table>
+              <TableHead sx={{ backgroundColor: '#f8fafc' }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Nome</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Hélice</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>Ações</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {atores.map(ator => (
+                  <TableRow key={ator.id} hover>
+                    <TableCell>#{ator.id}</TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>{ator.nome}</TableCell>
+                    <TableCell>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          fontWeight: 'bold',
+                          color: ator.tipo_helice === 'UNIVERSIDADE' ? '#0ea5e9' : 
+                                 ator.tipo_helice === 'INDUSTRIA' ? '#f59e0b' : '#10b981'
+                        }}
+                      >
+                        {ator.tipo_helice}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="center">
+                      {mostrarInativos ? (
+                        <Tooltip title="Restaurar">
+                          <IconButton color="success" onClick={() => restaurarAtor(ator.id)}>
+                            <RestoreIcon />
+                          </IconButton>
+                        </Tooltip>
+                      ) : (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                          <Tooltip title="Editar">
+                            <IconButton color="primary" onClick={() => prepararEdicao(ator)}>
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Inativar">
+                            <IconButton color="error" onClick={() => inativarAtor(ator.id)}>
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {atores.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                      {mostrarInativos ? 'Nenhum ator arquivado encontrado.' : 'Nenhum ator ativo encontrado.'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Grid>
+      </Grid>
     </Container>
   );
 };

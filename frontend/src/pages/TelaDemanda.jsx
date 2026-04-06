@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import {
   Container,
@@ -40,6 +40,8 @@ const TelaDemanda = () => {
   const [editandoId, setEditandoId] = useState(null);
   const [mensagem, setMensagem] = useState({ texto: '', tipo: 'info' });
   const [mostrarInativos, setMostrarInativos] = useState(false);
+
+  const formRef = useRef(null);
 
   useEffect(() => {
     carregarDemandas();
@@ -96,6 +98,8 @@ const TelaDemanda = () => {
     setAtorId(demanda.ator_id);
     setAreaCnpq(demanda.area_cnpq);
     setMensagem({ texto: '', tipo: 'info' });
+
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const inativarDemanda = async (id) => {
@@ -131,7 +135,7 @@ const TelaDemanda = () => {
   };
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 800, color: 'text.primary' }}>
           Gestão de Demandas
@@ -151,15 +155,15 @@ const TelaDemanda = () => {
           {mensagem.texto}
         </Alert>
       )}
-
-      {!mostrarInativos && (
-        <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>
-            {editandoId ? 'Editar Problema ou Oportunidade' : 'Registar Nova Demanda'}
-          </Typography>
-          <Box component="form" onSubmit={salvarDemanda}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={8}>
+      <Grid container spacing={4} alignItems="flex-start">
+        <Grid item xs={12} md={4} ref={formRef}>
+          {!mostrarInativos ? (
+            <Paper sx={{ p: 3, borderRadius: 2, position: 'sticky', top: '100px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>
+                {editandoId ? 'Editar Problema ou Oportunidade' : 'Registar Nova Demanda'}
+              </Typography>
+              <Box component="form" onSubmit={salvarDemanda} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                
                 <TextField
                   label="Título da Demanda"
                   fullWidth
@@ -167,8 +171,7 @@ const TelaDemanda = () => {
                   onChange={(e) => setTitulo(e.target.value)}
                   required
                 />
-              </Grid>
-              <Grid item xs={12} md={4}>
+                
                 <TextField
                   label="Área CNPq"
                   fullWidth
@@ -177,8 +180,7 @@ const TelaDemanda = () => {
                   onChange={(e) => setAreaCnpq(e.target.value)}
                   required
                 />
-              </Grid>
-              <Grid item xs={12}>
+                
                 <FormControl fullWidth required>
                   <InputLabel>Ator Vinculado (Indústria/Governo)</InputLabel>
                   <Select
@@ -194,8 +196,7 @@ const TelaDemanda = () => {
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
-              <Grid item xs={12}>
+                
                 <TextField
                   label="Descrição Detalhada"
                   fullWidth
@@ -205,72 +206,85 @@ const TelaDemanda = () => {
                   onChange={(e) => setDescricao(e.target.value)}
                   required
                 />
-              </Grid>
-              <Grid item xs={12} sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                <Button type="submit" variant="contained" color="success" size="large">
-                  {editandoId ? 'Atualizar Dados' : 'Registar Demanda'}
-                </Button>
-                {editandoId && (
-                  <Button variant="text" color="secondary" onClick={limparFormulario}>
-                    Cancelar
+                
+                <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+                  <Button type="submit" variant="contained" color="success" size="large" fullWidth>
+                    {editandoId ? 'Atualizar' : 'Registar'}
                   </Button>
-                )}
-              </Grid>
-            </Grid>
-          </Box>
-        </Paper>
-      )}
-
-      <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-        <Table>
-          <TableHead sx={{ backgroundColor: '#f8fafc' }}>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Título</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Área CNPq</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 'bold' }}>Ações</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {demandas.map(demanda => (
-              <TableRow key={demanda.id} hover>
-                <TableCell>#{demanda.id}</TableCell>
-                <TableCell sx={{ fontWeight: 500 }}>{demanda.titulo}</TableCell>
-                <TableCell>{demanda.area_cnpq}</TableCell>
-                <TableCell align="center">
-                  {mostrarInativos ? (
-                    <Tooltip title="Restaurar">
-                      <IconButton color="success" onClick={() => restaurarDemanda(demanda.id)}>
-                        <RestoreIcon />
-                      </IconButton>
-                    </Tooltip>
-                  ) : (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                      <Tooltip title="Editar">
-                        <IconButton color="primary" onClick={() => prepararEdicao(demanda)}>
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Inativar">
-                        <IconButton color="error" onClick={() => inativarDemanda(demanda.id)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+                  {editandoId && (
+                    <Button variant="outlined" color="secondary" onClick={limparFormulario} fullWidth>
+                      Cancelar
+                    </Button>
                   )}
-                </TableCell>
-              </TableRow>
-            ))}
-            {demandas.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                  {mostrarInativos ? 'Nenhuma demanda arquivada.' : 'Nenhuma demanda ativa encontrada.'}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                </Box>
+              </Box>
+            </Paper>
+          ) : (
+             <Paper sx={{ p: 3, borderRadius: 2, backgroundColor: '#fef2f2', border: '1px solid #fca5a5' }}>
+                <Typography variant="h6" color="error" sx={{ fontWeight: 700 }}>
+                  Modo Lixeira
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Você está visualizando os registros inativos. Restaure uma demanda na tabela ao lado para poder editá-la novamente.
+                </Typography>
+             </Paper>
+          )}
+        </Grid>
+
+        <Grid item xs={12} md={8}>
+          <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+            <Table>
+              <TableHead sx={{ backgroundColor: '#f8fafc' }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Título</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Área CNPq</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>Ações</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {demandas.map(demanda => (
+                  <TableRow key={demanda.id} hover>
+                    <TableCell>#{demanda.id}</TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>{demanda.titulo}</TableCell>
+                    <TableCell>{demanda.area_cnpq}</TableCell>
+                    <TableCell align="center">
+                      {mostrarInativos ? (
+                        <Tooltip title="Restaurar">
+                          <IconButton color="success" onClick={() => restaurarDemanda(demanda.id)}>
+                            <RestoreIcon />
+                          </IconButton>
+                        </Tooltip>
+                      ) : (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                          <Tooltip title="Editar">
+                            <IconButton color="primary" onClick={() => prepararEdicao(demanda)}>
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Inativar">
+                            <IconButton color="error" onClick={() => inativarDemanda(demanda.id)}>
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {demandas.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                      {mostrarInativos ? 'Nenhuma demanda arquivada.' : 'Nenhuma demanda ativa encontrada.'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Grid>
+
+      </Grid>
     </Container>
   );
 };

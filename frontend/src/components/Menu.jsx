@@ -27,9 +27,16 @@ const Menu = () => {
     <AppBar position="sticky" elevation={0} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #e2e8f0' }}>
       <Toolbar sx={{ maxWidth: '1200px', width: '100%', margin: '0 auto' }}>
         
-        <Typography variant="h6" component="div" sx={{ fontWeight: 900, color: 'primary.main', letterSpacing: '-0.5px', mr: 4 }}>
-          InovaHelix
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mr: 4 }}>
+          <img 
+            src="/TH.svg" 
+            alt="InovaHelix Logo" 
+            style={{ width: '32px', height: '32px' }} 
+          />
+          <Typography variant="h6" component="div" sx={{ fontWeight: 900, color: 'primary.main', letterSpacing: '-0.5px' }}>
+            InovaHelix
+          </Typography>
+        </Box>
 
         <Box sx={{ flexGrow: 1, display: 'flex', gap: 3 }}>
           <NavLink to="/gestores" style={navLinkStyle}>Equipe</NavLink>
@@ -39,7 +46,6 @@ const Menu = () => {
           <NavLink to="/matchmaking" style={navLinkStyle}>Matchmaking (IA)</NavLink>
         </Box>
 
-        {/* Perfil do Usuário */}
         {usuario && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mr: 3, borderLeft: '1px solid #e2e8f0', pl: 3 }}>
             <Avatar sx={{ width: 32, height: 32, bgcolor: usuario.is_master ? '#f59e0b' : 'primary.main', fontSize: '14px', fontWeight: 'bold' }}>
