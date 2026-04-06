@@ -46,10 +46,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         email: str = payload.get("sub")
         nome: str = payload.get("nome")
         is_master: bool = payload.get("is_master", False)
+        primeiro_login: bool = payload.get("primeiro_login", False) # Novo
         
         if email is None:
             raise credentials_exception
     except Exception:
         raise credentials_exception
         
-    return {"email": email, "nome": nome, "is_master": is_master}
+    return {"email": email, "nome": nome, "is_master": is_master, "primeiro_login": primeiro_login}

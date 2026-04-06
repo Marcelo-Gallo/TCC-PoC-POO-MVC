@@ -23,7 +23,6 @@ class GestorModel:
         
         if existing:
             if existing._mapping["is_deleted"]:
-                # Se está deletado, disparamos a flag para o frontend
                 raise ValueError("USER_ARCHIVED")
             else:
                 raise ValueError("Este e-mail já está em uso por um gestor ativo.")
@@ -31,9 +30,9 @@ class GestorModel:
         senha_hash = get_password_hash(gestor_data.senha)
         try:
             query = text("""
-                INSERT INTO gestor (nome, email, senha_hash, is_master) 
-                VALUES (:nome, :email, :senha_hash, false) 
-                RETURNING id, nome, email, is_master, is_deleted
+                INSERT INTO gestor (nome, email, senha_hash, is_master, primeiro_login) 
+                VALUES (:nome, :email, :senha_hash, false, true) 
+                RETURNING id, nome, email, is_master, primeiro_login, is_deleted
             """)
             result = self.db.execute(query, {
                 "nome": gestor_data.nome,
@@ -51,9 +50,9 @@ class GestorModel:
         try:
             query = text("""
                 UPDATE gestor 
-                SET nome = :nome, senha_hash = :senha_hash, is_deleted = false 
+                SET nome = :nome, senha_hash = :senha_hash, is_deleted = false, primeiro_login = true 
                 WHERE email = :email AND is_deleted = true
-                RETURNING id, nome, email, is_master, is_deleted
+                RETURNING id, nome, email, is_master, primeiro_login, is_deleted
             """)
             result = self.db.execute(query, {
                 "nome": restore_data.novo_nome,
@@ -104,3 +103,22 @@ class GestorModel:
 
         self.db.execute(text("UPDATE gestor SET is_deleted = true WHERE id = :id"), {"id": gestor_id})
         self.db.commit()
+
+    def atualizar_senha_primeiro_login(self, email: str, nova_senha: str):
+        senha_hash = get_password_hash(nova_senha)
+        try:
+            query = text("""
+                UPDATE gestor 
+                SET senha_hash = :senha_hash, primeiro_login = false 
+                WHERE email = :email AND is_deleted = false
+                RETURNING id, nome, email, is_master, primeiro_login, is_deleted
+            """)
+            result = self.db.execute(query, {"senha_hash": senha_hash, "email": email})
+            self.db.commit()
+            res = result.fetchone()
+            if not res:
+                raise ValueError("Conta não encontrada.")
+            return dict(res._mapping)
+        except Exception as e:
+            self.db.rollback()
+            raise ValueError(str(e))

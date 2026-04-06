@@ -73,3 +73,14 @@ def deletar_gestor(
         return {"message": "Gestor excluído com sucesso."}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+@gestor_controller.put("/primeiro-login", response_model=dto.GestorResponse)
+def atualizar_primeiro_login(
+    dados: dto.GestorPrimeiroLogin, 
+    model: GestorModel = Depends(get_gestor_model), 
+    current_user: dict = Depends(get_current_user)
+):
+    try:
+        return model.atualizar_senha_primeiro_login(current_user["email"], dados.nova_senha)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

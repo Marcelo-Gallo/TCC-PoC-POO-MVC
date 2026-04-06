@@ -19,10 +19,14 @@ class GestorResponse(BaseModel):
     nome: str
     email: EmailStr
     is_master: bool
+    primeiro_login: bool
     is_deleted: bool
 
     class Config:
         from_attributes = True
+
+class GestorPrimeiroLogin(BaseModel):
+    nova_senha: str
 
 class AtorBase(BaseModel):
     nome: str
