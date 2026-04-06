@@ -4,22 +4,42 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 
 import theme from './theme';
+import { getUsuarioLogado } from './utils/auth';
+
+// Componentes e Páginas
+import Layout from './components/Layout';
 import TelaLogin from './pages/TelaLogin';
+import TelaPrimeiroLogin from './pages/TelaPrimeiroLogin';
+import GestaoGestores from './pages/GestaoGestores';
 import GestaoAtores from './pages/GestaoAtores';
 import TelaDemanda from './pages/TelaDemanda';
 import TelaExpertise from './pages/TelaExpertise';
 import TelaMatchmaking from './pages/TelaMatchmaking';
-import Layout from './components/Layout';
-import GestaoGestores from './pages/GestaoGestores';
 
-const PrivateRoute = ({ children }) => {
-  const isAuthenticated = !!localStorage.getItem('token');
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  const usuario = getUsuarioLogado();
   
-  return isAuthenticated ? (
+  if (!token) return <Navigate to="/login" replace />;
+  
+  if (usuario?.primeiro_login) return <Navigate to="/primeiro-login" replace />;
+  
+  return (
     <Layout>
       {children}
     </Layout>
-  ) : <Navigate to="/login" replace />;
+  );
+};
+
+const SetupRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  const usuario = getUsuarioLogado();
+  
+  if (!token) return <Navigate to="/login" replace />;
+  
+  if (!usuario?.primeiro_login) return <Navigate to="/atores" replace />;
+  
+  return children;
 };
 
 const App = () => {
@@ -30,11 +50,16 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<TelaLogin />} />
-          <Route path="/gestores" element={<PrivateRoute><GestaoGestores /></PrivateRoute>} />
-          <Route path="/atores" element={<PrivateRoute><GestaoAtores /></PrivateRoute>} />
-          <Route path="/demandas" element={<PrivateRoute><TelaDemanda /></PrivateRoute>} />
-          <Route path="/expertises" element={<PrivateRoute><TelaExpertise /></PrivateRoute>} />
-          <Route path="/matchmaking" element={<PrivateRoute><TelaMatchmaking /></PrivateRoute>} />
+          
+          {/* Tela de segurança */}
+          <Route path="/primeiro-login" element={<SetupRoute><TelaPrimeiroLogin /></SetupRoute>} />
+
+          {/* Resto do sistema trancado com o ProtectedRoute */}
+          <Route path="/gestores" element={<ProtectedRoute><GestaoGestores /></ProtectedRoute>} />
+          <Route path="/atores" element={<ProtectedRoute><GestaoAtores /></ProtectedRoute>} />
+          <Route path="/demandas" element={<ProtectedRoute><TelaDemanda /></ProtectedRoute>} />
+          <Route path="/expertises" element={<ProtectedRoute><TelaExpertise /></ProtectedRoute>} />
+          <Route path="/matchmaking" element={<ProtectedRoute><TelaMatchmaking /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

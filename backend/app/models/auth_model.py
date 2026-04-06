@@ -16,15 +16,15 @@ class AuthModel:
             data={
                 "sub": gestor["email"], 
                 "nome": gestor["nome"], 
-                "is_master": gestor["is_master"]
+                "is_master": gestor["is_master"],
+                "primeiro_login": gestor["primeiro_login"] # Injetando no token
             }
         )
-        
         return {"access_token": token_jwt, "token_type": "bearer"}
 
     def _buscar_por_email(self, email: str):
         query = text("""
-            SELECT id, nome, email, senha_hash, is_master, is_deleted 
+            SELECT id, nome, email, senha_hash, is_master, primeiro_login, is_deleted 
             FROM gestor 
             WHERE email = :email AND is_deleted = false
         """)

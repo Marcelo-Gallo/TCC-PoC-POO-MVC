@@ -4,6 +4,7 @@ CREATE TABLE gestor (
     email VARCHAR(255) UNIQUE NOT NULL,
     senha_hash VARCHAR(255) NOT NULL,
     is_master BOOLEAN DEFAULT FALSE,
+    primeiro_login BOOLEAN DEFAULT TRUE,
     is_deleted BOOLEAN DEFAULT FALSE
 );
 

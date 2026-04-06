@@ -14,8 +14,8 @@ def seed_data():
         senha_hash = get_password_hash("admin123")
         db.execute(
             text("""
-            INSERT INTO gestor (nome, email, senha_hash, is_master) 
-            VALUES (:nome, :email, :senha, :is_master) 
+            INSERT INTO gestor (nome, email, senha_hash, is_master, primeiro_login) 
+            VALUES (:nome, :email, :senha, :is_master, false) 
             ON CONFLICT (email) DO NOTHING
             """),
             {
@@ -25,7 +25,7 @@ def seed_data():
                 "is_master": True
             }
         )
-
+        
         # ==========================================
         # ATORES (Tríplice Hélice)
         # ==========================================
