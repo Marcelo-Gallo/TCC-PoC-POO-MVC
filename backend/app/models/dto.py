@@ -18,6 +18,7 @@ class GestorResponse(BaseModel):
     id: int
     nome: str
     email: EmailStr
+    is_master: bool
     is_deleted: bool
 
     class Config:

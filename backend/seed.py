@@ -9,20 +9,25 @@ def seed_data():
         db.execute(text("TRUNCATE TABLE portfolio_expertise, expertise, demanda, ator RESTART IDENTITY CASCADE"))
         
         # ==========================================
-        # 1. GESTOR
+        # GESTOR
         # ==========================================
         senha_hash = get_password_hash("admin123")
         db.execute(
             text("""
-            INSERT INTO gestor (nome, email, senha_hash) 
-            VALUES (:nome, :email, :senha) 
+            INSERT INTO gestor (nome, email, senha_hash, is_master) 
+            VALUES (:nome, :email, :senha, :is_master) 
             ON CONFLICT (email) DO NOTHING
             """),
-            {"nome": "Gestor de Inovação", "email": "admin@prefeitura.gov.br", "senha": senha_hash}
+            {
+                "nome": "Gestor de Inovação (Master SEED)", 
+                "email": "admin@prefeitura.gov.br", 
+                "senha": senha_hash, 
+                "is_master": True
+            }
         )
 
         # ==========================================
-        # 2. ATORES (Tríplice Hélice)
+        # ATORES (Tríplice Hélice)
         # ==========================================
         atores_in = [
             {"nome": "Universidade Estadual", "tipo": "UNIVERSIDADE"},
@@ -47,7 +52,7 @@ def seed_data():
             atores_ids[ator["nome"]] = res[0]
 
         # ==========================================
-        # 3. DEMANDAS (Exclusivamente Indústria e Governo)
+        # DEMANDAS (Exclusivamente Indústria e Governo)
         # ==========================================
         demandas_in = [
             {
@@ -94,7 +99,7 @@ def seed_data():
             )
 
         # ==========================================
-        # 4. EXPERTISES E PORTFÓLIOS (Exclusivamente Universidades)
+        # EXPERTISES E PORTFÓLIOS (Exclusivamente Universidades)
         # ==========================================
         expertises_in = [
             {

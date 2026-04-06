@@ -12,13 +12,19 @@ class AuthModel:
         if not gestor or not security.verify_password(senha, gestor["senha_hash"]):
             raise ValueError("Credenciais inválidas")
             
-        token_jwt = security.create_access_token(data={"sub": gestor["email"]})
+        token_jwt = security.create_access_token(
+            data={
+                "sub": gestor["email"], 
+                "nome": gestor["nome"], 
+                "is_master": gestor["is_master"]
+            }
+        )
         
         return {"access_token": token_jwt, "token_type": "bearer"}
 
     def _buscar_por_email(self, email: str):
         query = text("""
-            SELECT id, nome, email, senha_hash, is_deleted 
+            SELECT id, nome, email, senha_hash, is_master, is_deleted 
             FROM gestor 
             WHERE email = :email AND is_deleted = false
         """)
