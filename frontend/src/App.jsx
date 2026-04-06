@@ -1,7 +1,7 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import React, { useEffect } from 'react';
 
 import theme from './theme';
 import { getUsuarioLogado } from './utils/auth';
@@ -43,6 +43,24 @@ const SetupRoute = ({ children }) => {
 };
 
 const App = () => {
+
+  useEffect(() => {
+    const vigiaSessao = setInterval(() => {
+      const usuario = getUsuarioLogado();
+      if (usuario && usuario.exp) {
+        const dataAtual = Math.floor(Date.now() / 1000); 
+        
+        if (usuario.exp < dataAtual) {
+          localStorage.removeItem('token');
+          alert('Sua sessão expirou por tempo de inatividade. Por favor, faça login novamente.');
+          window.location.href = '/login';
+        }
+      }
+    }, 10000);
+
+    return () => clearInterval(vigiaSessao);
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
