@@ -25,7 +25,9 @@ import {
   Article as ArticleIcon,
   EmojiObjects as PatenteIcon,
   School as TeseIcon,
-  Work as ProjetoIcon
+  Work as ProjetoIcon,
+  RestoreFromTrash as RestoreIcon,
+  Inventory as InventoryIcon
 } from '@mui/icons-material';
 
 const GestaoPortfolio = ({ expertiseId, onClose, onAtualizar }) => {
@@ -39,23 +41,25 @@ const GestaoPortfolio = ({ expertiseId, onClose, onAtualizar }) => {
   const [titulo, setTitulo] = useState('');
   const [ano, setAno] = useState('');
   const [resumo, setResumo] = useState('');
+  const [mostrarInativos, setMostrarInativos] = useState(false);
 
   useEffect(() => {
     carregarPortfolios();
-  }, [expertiseId]);
+  }, [expertiseId, mostrarInativos]);
 
   const carregarPortfolios = async () => {
     try {
-      const response = await api.get('/expertises');
-      const expertiseAtual = response.data.find(e => e.id === expertiseId);
+      const responseExp = await api.get('/expertises');
+      const expertiseAtual = responseExp.data.find(e => e.id === expertiseId);
       
       if (expertiseAtual) {
-        setPortfolios(expertiseAtual.portfolios);
         setNomePesquisador(expertiseAtual.pesquisador_responsavel);
       } else {
-        setPortfolios([]);
         setNomePesquisador('');
       }
+
+      const resPortfolios = await api.get(`/expertises/${expertiseId}/portfolios?mostrar_inativos=${mostrarInativos}`);
+      setPortfolios(resPortfolios.data);
     } catch (error) {
       setMensagem({ texto: 'Erro ao recarregar portfólios.', tipo: 'error' });
     }
@@ -123,6 +127,19 @@ const GestaoPortfolio = ({ expertiseId, onClose, onAtualizar }) => {
     }
   };
 
+  const restaurarPortfolio = async (id) => {
+    if (window.confirm('Deseja restaurar este trabalho para o portfólio ativo?')) {
+      try {
+        await api.put(`/expertises/portfolios/${id}`, { is_deleted: false });
+        setMensagem({ texto: 'Trabalho restaurado com sucesso!', tipo: 'success' });
+        carregarPortfolios();
+        onAtualizar();
+      } catch (error) {
+        setMensagem({ texto: 'Erro ao restaurar.', tipo: 'error' });
+      }
+    }
+  };
+
   const getTipoIcon = (tipo) => {
     switch(tipo) {
       case 'ARTIGO': return <ArticleIcon fontSize="small" />;
@@ -154,11 +171,22 @@ const GestaoPortfolio = ({ expertiseId, onClose, onAtualizar }) => {
             {nomePesquisador || `Investigador #${expertiseId}`}
           </Typography>
         </Box>
-        <Tooltip title="Fechar painel">
-          <IconButton onClick={onClose} size="small" sx={{ backgroundColor: '#e2e8f0', '&:hover': { backgroundColor: '#cbd5e1' } }}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Button
+            size="small"
+            variant="outlined"
+            color={mostrarInativos ? "secondary" : "warning"}
+            startIcon={mostrarInativos ? null : <InventoryIcon fontSize="small" />}
+            onClick={() => setMostrarInativos(!mostrarInativos)}
+          >
+            {mostrarInativos ? 'Voltar' : 'Lixeira'}
+          </Button>
+          <Tooltip title="Fechar painel">
+            <IconButton onClick={onClose} size="small" sx={{ backgroundColor: '#e2e8f0', '&:hover': { backgroundColor: '#cbd5e1' } }}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
 
       <Box sx={{ p: 2, flexGrow: 1, overflowY: 'auto', backgroundColor: '#ffffff' }}>
@@ -170,15 +198,17 @@ const GestaoPortfolio = ({ expertiseId, onClose, onAtualizar }) => {
 
         {modo === 'lista' && (
           <>
-            <Button 
-              variant="contained" 
-              fullWidth 
-              startIcon={<AddIcon />} 
-              onClick={abrirFormularioNovo}
-              sx={{ mb: 3, py: 1 }}
-            >
-              Adicionar Novo Trabalho
-            </Button>
+            {!mostrarInativos && (
+              <Button 
+                variant="contained" 
+                fullWidth 
+                startIcon={<AddIcon />} 
+                onClick={abrirFormularioNovo}
+                sx={{ mb: 3, py: 1 }}
+              >
+                Adicionar Novo Trabalho
+              </Button>
+            )}
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {portfolios.length > 0 ? (
@@ -197,12 +227,22 @@ const GestaoPortfolio = ({ expertiseId, onClose, onAtualizar }) => {
                         <Chip label={port.ano_publicacao} size="small" sx={{ backgroundColor: '#f1f5f9', fontWeight: 600 }} />
                       </Box>
                       <Box sx={{ display: 'flex', gap: 0.5, mt: -0.5, mr: -1 }}>
-                        <IconButton size="small" color="primary" onClick={() => abrirFormularioEdicao(port)}>
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton size="small" color="error" onClick={() => inativarPortfolio(port.id)}>
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                        {mostrarInativos ? (
+                          <Tooltip title="Restaurar">
+                            <IconButton size="small" color="success" onClick={() => restaurarPortfolio(port.id)}>
+                              <RestoreIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        ) : (
+                          <>
+                            <IconButton size="small" color="primary" onClick={() => abrirFormularioEdicao(port)}>
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton size="small" color="error" onClick={() => inativarPortfolio(port.id)}>
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </>
+                        )}
                       </Box>
                     </Box>
                     <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.3, mb: 1, color: '#1e293b' }}>
@@ -216,7 +256,7 @@ const GestaoPortfolio = ({ expertiseId, onClose, onAtualizar }) => {
                 ))
               ) : (
                 <Typography textAlign="center" color="text.secondary" sx={{ py: 4 }}>
-                  Nenhum trabalho registado neste portfólio.
+                  {mostrarInativos ? "Nenhum trabalho arquivado neste portfólio." : "Nenhum trabalho registado neste portfólio."}
                 </Typography>
               )}
             </Box>
@@ -271,7 +311,6 @@ const GestaoPortfolio = ({ expertiseId, onClose, onAtualizar }) => {
               value={resumo} 
               onChange={(e) => setResumo(e.target.value)} 
               required 
-              helperText="Descreva as palavras-chave e a tecnologia envolvida."
             />
             
             <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
