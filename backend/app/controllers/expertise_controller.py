@@ -67,3 +67,15 @@ def listar_expertises(
     current_user: str = Depends(get_current_user)
 ):
     return model.listar_expertises(mostrar_inativos)
+
+@expertise_controller.get("/{expertise_id}/portfolios", response_model=List[dto.PortfolioResponse])
+def listar_portfolios_da_expertise(
+    expertise_id: int, 
+    mostrar_inativos: bool = False, 
+    model: ExpertiseModel = Depends(get_expertise_model), 
+    current_user: str = Depends(get_current_user)
+):
+    try:
+        return model.listar_portfolios_por_expertise(expertise_id, mostrar_inativos)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Erro interno ao buscar portfólios.")

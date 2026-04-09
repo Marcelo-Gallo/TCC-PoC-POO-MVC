@@ -128,3 +128,22 @@ class ExpertiseModel:
             WHERE expertise_id = :expertise_id
         """)
         self.db.execute(query, {"expertise_id": expertise_id})
+
+    def listar_portfolios_por_expertise(self, expertise_id: int, mostrar_inativos: bool = False):
+        if mostrar_inativos:
+            query = text("""
+                SELECT id, expertise_id, tipo, titulo, ano_publicacao, link_acesso, resumo, is_deleted 
+                FROM portfolio_expertise 
+                WHERE expertise_id = :expertise_id AND is_deleted = true
+                ORDER BY ano_publicacao DESC
+            """)
+        else:
+            query = text("""
+                SELECT id, expertise_id, tipo, titulo, ano_publicacao, link_acesso, resumo, is_deleted 
+                FROM portfolio_expertise 
+                WHERE expertise_id = :expertise_id AND is_deleted = false
+                ORDER BY ano_publicacao DESC
+            """)
+        
+        result = self.db.execute(query, {"expertise_id": expertise_id}).fetchall()
+        return [dict(row._mapping) for row in result]
