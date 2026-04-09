@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
+import { useTableData } from '../hooks/useTableData';
 import {
   Container,
   Typography,
@@ -20,14 +21,17 @@ import {
   IconButton,
   Alert,
   Grid,
-  Tooltip
+  Tooltip,
+  TableSortLabel,
+  InputAdornment
 } from '@mui/material';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   RestoreFromTrash as RestoreIcon,
   ArrowBack as BackIcon,
-  Inventory as InventoryIcon
+  Inventory as InventoryIcon,
+  Search as SearchIcon
 } from '@mui/icons-material';
 
 const TelaDemanda = () => {
@@ -40,6 +44,14 @@ const TelaDemanda = () => {
   const [editandoId, setEditandoId] = useState(null);
   const [mensagem, setMensagem] = useState({ texto: '', tipo: 'info' });
   const [mostrarInativos, setMostrarInativos] = useState(false);
+
+  const {
+    processedData,
+    searchQuery,
+    setSearchQuery,
+    sortConfig,
+    requestSort
+  } = useTableData(demandas, 'id');
 
   const formRef = useRef(null);
 
@@ -232,18 +244,58 @@ const TelaDemanda = () => {
         </Grid>
 
         <Grid item xs={12} md={8}>
+          <Paper sx={{ mb: 2, p: 2, borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+            <TextField
+              fullWidth
+              placeholder="Buscar por ID, Título, Área ou Descrição..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Paper>
+
           <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
             <Table>
               <TableHead sx={{ backgroundColor: '#f8fafc' }}>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Título</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Área CNPq</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>
+                    <TableSortLabel
+                      active={sortConfig.key === 'id'}
+                      direction={sortConfig.key === 'id' ? sortConfig.direction : 'asc'}
+                      onClick={() => requestSort('id')}
+                    >
+                      ID
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>
+                    <TableSortLabel
+                      active={sortConfig.key === 'titulo'}
+                      direction={sortConfig.key === 'titulo' ? sortConfig.direction : 'asc'}
+                      onClick={() => requestSort('titulo')}
+                    >
+                      Título
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>
+                    <TableSortLabel
+                      active={sortConfig.key === 'area_cnpq'}
+                      direction={sortConfig.key === 'area_cnpq' ? sortConfig.direction : 'asc'}
+                      onClick={() => requestSort('area_cnpq')}
+                    >
+                      Área CNPq
+                    </TableSortLabel>
+                  </TableCell>
                   <TableCell align="center" sx={{ fontWeight: 'bold' }}>Ações</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {demandas.map(demanda => (
+                {processedData.map(demanda => (
                   <TableRow key={demanda.id} hover>
                     <TableCell>#{demanda.id}</TableCell>
                     <TableCell sx={{ fontWeight: 500 }}>{demanda.titulo}</TableCell>
@@ -272,10 +324,10 @@ const TelaDemanda = () => {
                     </TableCell>
                   </TableRow>
                 ))}
-                {demandas.length === 0 && (
+                {processedData.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                      {mostrarInativos ? 'Nenhuma demanda arquivada.' : 'Nenhuma demanda ativa encontrada.'}
+                      Nenhum resultado encontrado.
                     </TableCell>
                   </TableRow>
                 )}
