@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import GestaoPortfolio from '../components/GestaoPortfolio';
+import { useTableData } from '../hooks/useTableData';
 import {
   Container,
   Typography,
@@ -23,7 +24,9 @@ import {
   Grid,
   Tooltip,
   Badge,
-  Fade
+  Fade,
+  TableSortLabel,
+  InputAdornment
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -31,7 +34,8 @@ import {
   RestoreFromTrash as RestoreIcon,
   ArrowBack as BackIcon,
   Inventory as InventoryIcon,
-  FolderOpen as FolderIcon
+  FolderOpen as FolderIcon,
+  Search as SearchIcon
 } from '@mui/icons-material';
 
 const TelaExpertise = () => {
@@ -48,6 +52,14 @@ const TelaExpertise = () => {
   const [editandoId, setEditandoId] = useState(null);
   const [expertiseSelecionada, setExpertiseSelecionada] = useState(null);
   const [mostrarInativos, setMostrarInativos] = useState(false);
+
+  const {
+    processedData,
+    searchQuery,
+    setSearchQuery,
+    sortConfig,
+    requestSort
+  } = useTableData(expertises, 'id');
 
   const formRef = useRef(null);
 
@@ -252,18 +264,51 @@ const TelaExpertise = () => {
         <Grid item xs={12} md={8}>
           <Grid container spacing={3}>
             <Grid item xs={12} md={expertiseSelecionada && !mostrarInativos ? 7 : 12}>
+              
+              <Paper sx={{ mb: 2, p: 2, borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                <TextField
+                  fullWidth
+                  placeholder="Buscar por pesquisador ou área..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Paper>
+
               <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
                 <Table>
                   <TableHead sx={{ backgroundColor: '#f8fafc' }}>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Investigador</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Área</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        <TableSortLabel
+                          active={sortConfig.key === 'pesquisador_responsavel'}
+                          direction={sortConfig.key === 'pesquisador_responsavel' ? sortConfig.direction : 'asc'}
+                          onClick={() => requestSort('pesquisador_responsavel')}
+                        >
+                          Investigador
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>
+                        <TableSortLabel
+                          active={sortConfig.key === 'area_conhecimento'}
+                          direction={sortConfig.key === 'area_conhecimento' ? sortConfig.direction : 'asc'}
+                          onClick={() => requestSort('area_conhecimento')}
+                        >
+                          Área
+                        </TableSortLabel>
+                      </TableCell>
                       <TableCell align="center" sx={{ fontWeight: 'bold' }}>Trabalhos</TableCell>
                       <TableCell align="center" sx={{ fontWeight: 'bold' }}>Ações</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {expertises.map(exp => (
+                    {processedData.map(exp => (
                       <TableRow 
                         key={exp.id} 
                         hover 
@@ -303,10 +348,10 @@ const TelaExpertise = () => {
                         </TableCell>
                       </TableRow>
                     ))}
-                    {expertises.length === 0 && (
+                    {processedData.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                          {mostrarInativos ? 'Nenhum investigador arquivado encontrado.' : 'Nenhum investigador ativo encontrado.'}
+                          Nenhum resultado encontrado.
                         </TableCell>
                       </TableRow>
                     )}

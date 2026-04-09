@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
+import { useTableData } from '../hooks/useTableData';
 import {
   Container,
   Typography,
@@ -20,14 +21,17 @@ import {
   IconButton,
   Alert,
   Grid,
-  Tooltip
+  Tooltip,
+  TableSortLabel,
+  InputAdornment
 } from '@mui/material';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   RestoreFromTrash as RestoreIcon,
   ArrowBack as BackIcon,
-  Inventory as InventoryIcon
+  Inventory as InventoryIcon,
+  Search as SearchIcon
 } from '@mui/icons-material';
 
 const GestaoAtores = () => {
@@ -37,6 +41,14 @@ const GestaoAtores = () => {
   const [editandoId, setEditandoId] = useState(null);
   const [mensagem, setMensagem] = useState({ texto: '', tipo: 'info' });
   const [mostrarInativos, setMostrarInativos] = useState(false);
+
+  const {
+    processedData,
+    searchQuery,
+    setSearchQuery,
+    sortConfig,
+    requestSort
+  } = useTableData(atores, 'id');
 
   const formRef = useRef(null);
 
@@ -182,18 +194,59 @@ const GestaoAtores = () => {
         </Grid>
 
         <Grid item xs={12} md={8}>
+          <Paper sx={{ mb: 2, p: 2, borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Buscar por ID, Nome ou Hélice..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Paper>
+
           <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
             <Table>
               <TableHead sx={{ backgroundColor: '#f8fafc' }}>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Nome</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Hélice</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>
+                    <TableSortLabel
+                      active={sortConfig.key === 'id'}
+                      direction={sortConfig.key === 'id' ? sortConfig.direction : 'asc'}
+                      onClick={() => requestSort('id')}
+                    >
+                      ID
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>
+                    <TableSortLabel
+                      active={sortConfig.key === 'nome'}
+                      direction={sortConfig.key === 'nome' ? sortConfig.direction : 'asc'}
+                      onClick={() => requestSort('nome')}
+                    >
+                      Nome
+                    </TableSortLabel>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>
+                    <TableSortLabel
+                      active={sortConfig.key === 'tipo_helice'}
+                      direction={sortConfig.key === 'tipo_helice' ? sortConfig.direction : 'asc'}
+                      onClick={() => requestSort('tipo_helice')}
+                    >
+                      Hélice
+                    </TableSortLabel>
+                  </TableCell>
                   <TableCell align="center" sx={{ fontWeight: 'bold' }}>Ações</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {atores.map(ator => (
+                {processedData.map(ator => (
                   <TableRow key={ator.id} hover>
                     <TableCell>#{ator.id}</TableCell>
                     <TableCell sx={{ fontWeight: 500 }}>{ator.nome}</TableCell>
@@ -233,10 +286,10 @@ const GestaoAtores = () => {
                     </TableCell>
                   </TableRow>
                 ))}
-                {atores.length === 0 && (
+                {processedData.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                      {mostrarInativos ? 'Nenhum ator arquivado encontrado.' : 'Nenhum ator ativo encontrado.'}
+                      Nenhum resultado encontrado.
                     </TableCell>
                   </TableRow>
                 )}
