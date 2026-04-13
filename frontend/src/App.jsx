@@ -16,6 +16,9 @@ import TelaDemanda from './pages/TelaDemanda';
 import TelaExpertise from './pages/TelaExpertise';
 import TelaMatchmaking from './pages/TelaMatchmaking';
 
+import TelaRecuperarSenha from './pages/TelaRecuperarSenha';
+import TelaRedefinirSenha from './pages/TelaRedefinirSenha';
+
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   const usuario = getUsuarioLogado();
@@ -78,6 +81,9 @@ const App = () => {
           <Route path="/demandas" element={<ProtectedRoute><TelaDemanda /></ProtectedRoute>} />
           <Route path="/expertises" element={<ProtectedRoute><TelaExpertise /></ProtectedRoute>} />
           <Route path="/matchmaking" element={<ProtectedRoute><TelaMatchmaking /></ProtectedRoute>} />
+
+          <Route path="/recuperar-senha" element={<TelaRecuperarSenha />} />
+          <Route path="/redefinir-senha" element={<TelaRedefinirSenha />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

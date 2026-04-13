@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.controllers import gestor_controller
 import seed
+import os
 
 from app.controllers import (
     auth_controller,
@@ -18,10 +19,13 @@ async def lifespan(app: FastAPI):
     seed.seed_data()
     yield
 
+ROOT_PATH = os.getenv("ROOT_PATH", "")
+
 app = FastAPI(
     title="API Matchmaking Tríplice Hélice",
     description="Módulo de corretagem digital de inovação para gestão municipal. (Refatorado para POO/MVC)",
     version="1.0.0",
+    root_path=ROOT_PATH,
     lifespan=lifespan
 )
 
