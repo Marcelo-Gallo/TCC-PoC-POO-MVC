@@ -32,7 +32,7 @@ const GestaoGestores = () => {
       const response = await api.get('/gestores');
       setGestores(response.data);
     } catch (error) {
-      setMensagem({ texto: 'Erro ao carregar a equipa.', tipo: 'error' });
+      setMensagem({ texto: 'Erro ao carregar a equie.', tipo: 'error' });
     }
   };
 
@@ -95,7 +95,7 @@ const GestaoGestores = () => {
     <Container maxWidth="lg">
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 800, color: 'text.primary', display: 'flex', alignItems: 'center', gap: 2 }}>
-          Equipa de Operação <ShieldIcon color="primary" fontSize="large" />
+          Equipe de Operação <ShieldIcon color="primary" fontSize="large" />
         </Typography>
         <Typography variant="subtitle1" color="text.secondary">
           Gestão de administradores da prefeitura e controle de acessos da plataforma.

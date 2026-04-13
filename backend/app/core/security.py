@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timedelta
 from typing import Optional
-from jose import jwt
+from jose import jwt, JWTError
 import bcrypt
 from dotenv import load_dotenv
 from fastapi.security import OAuth2PasswordBearer
@@ -54,3 +54,14 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         raise credentials_exception
         
     return {"email": email, "nome": nome, "is_master": is_master, "primeiro_login": primeiro_login}
+
+def decode_token_email(token: str) -> dict | None:
+    """
+    Decodifica um token puro passado como string, sem depender de cabeçalhos HTTP.
+    Usado para validação de tokens de recuperação de senha.
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        return None

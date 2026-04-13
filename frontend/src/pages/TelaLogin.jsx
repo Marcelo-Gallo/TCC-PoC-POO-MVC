@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import {
   Avatar,
@@ -101,6 +101,11 @@ const TelaLogin = () => {
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
             />
+            <div style={{ marginTop: '10px', textAlign: 'right' }}>
+                <Link to="/recuperar-senha" style={{ fontSize: '14px', color: '#3498db', textDecoration: 'none' }}>
+                    Esqueci minha senha
+                </Link>
+            </div>
             <Button
               type="submit"
               fullWidth
