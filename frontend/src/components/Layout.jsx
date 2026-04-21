@@ -5,18 +5,19 @@ import Footer from './Footer';
 
 const Layout = ({ children }) => {
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Menu />
       
       <Box 
         component="main" 
         sx={{ 
           flexGrow: 1, 
-          py: 4, 
-          overflow: 'hidden', // Mudança crucial: o main não rola mais, ele apenas contém
+          py: { xs: 2, md: 4 }, 
+          px: { xs: 1, sm: 2, md: 3 },
           display: 'flex',
           flexDirection: 'column',
-          position: 'relative'
+          position: 'relative',
+          overflowX: 'hidden'
         }}
       >
         {children}

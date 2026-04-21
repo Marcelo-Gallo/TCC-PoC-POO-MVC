@@ -1,73 +1,44 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { useTableData } from '../hooks/useTableData';
+import FormularioAtor from '../components/FormularioAtor';
+import TabelaAtores from '../components/TabelaAtores';
 import {
   Container,
-  Typography,
-  Box,
-  TextField,
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
   Alert,
   Grid,
-  Tooltip,
-  TableSortLabel,
-  InputAdornment,
-  useTheme,
-  useMediaQuery,
-  Chip,
-  Divider,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Button,
+  Typography,
+  Box,
+  useTheme,
+  useMediaQuery,
+  Fab
 } from '@mui/material';
-import {
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  RestoreFromTrash as RestoreIcon,
-  ArrowBack as BackIcon,
-  Inventory as InventoryIcon,
-  Search as SearchIcon,
-  HelpOutline as HelpIcon
-} from '@mui/icons-material';
+import { Add as AddIcon } from '@mui/icons-material';
 
 const GestaoAtores = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const [atores, setAtores] = useState([]);
-  const [nome, setNome] = useState('');
-  const [tipoHelice, setTipoHelice] = useState('UNIVERSIDADE');
-  const [editandoId, setEditandoId] = useState(null);
+  const [atorParaEditar, setAtorParaEditar] = useState(null);
   const [mensagem, setMensagem] = useState({ texto: '', tipo: 'info' });
   const [mostrarInativos, setMostrarInativos] = useState(false);
   const [openHelp, setOpenHelp] = useState(false);
-
-  const {
-    processedData,
-    searchQuery,
-    setSearchQuery,
-    sortConfig,
-    requestSort
-  } = useTableData(atores, 'id');
-
-  const formRef = useRef(null);
+  const [openFormModal, setOpenFormModal] = useState(false);
 
   useEffect(() => {
     carregarAtores();
   }, [mostrarInativos]);
+
+  useEffect(() => {
+    if (atorParaEditar) {
+      setOpenFormModal(true);
+    }
+  }, [atorParaEditar]);
 
   const carregarAtores = async () => {
     try {
@@ -76,31 +47,6 @@ const GestaoAtores = () => {
     } catch (error) {
       setMensagem({ texto: 'Erro ao carregar a lista de atores.', tipo: 'error' });
     }
-  };
-
-  const salvarAtor = async (e) => {
-    e.preventDefault();
-    try {
-      if (editandoId) {
-        await api.put(`/atores/${editandoId}`, { nome, tipo_helice: tipoHelice });
-        setMensagem({ texto: 'Ator atualizado com sucesso!', tipo: 'success' });
-      } else {
-        await api.post('/atores', { nome, tipo_helice: tipoHelice });
-        setMensagem({ texto: 'Ator cadastrado com sucesso!', tipo: 'success' });
-      }
-      limparFormulario();
-      carregarAtores();
-    } catch (error) {
-      setMensagem({ texto: error.response?.data?.detail || 'Erro ao salvar o ator.', tipo: 'error' });
-    }
-  };
-
-  const prepararEdicao = (ator) => {
-    setEditandoId(ator.id);
-    setNome(ator.nome);
-    setTipoHelice(ator.tipo_helice);
-    setMensagem({ texto: '', tipo: 'info' });
-    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const inativarAtor = async (id) => {
@@ -127,172 +73,87 @@ const GestaoAtores = () => {
     }
   };
 
-  const limparFormulario = () => {
-    setNome('');
-    setTipoHelice('UNIVERSIDADE');
-    setEditandoId(null);
-  };
-
-  const getHeliceStyle = (tipo) => {
-    switch (tipo) {
-      case 'UNIVERSIDADE': return { color: 'info', label: 'Universidade' };
-      case 'INDUSTRIA': return { color: 'warning', label: 'Indústria' };
-      case 'GOVERNO': return { color: 'success', label: 'Governo' };
-      default: return { color: 'default', label: tipo };
-    }
+  const fecharModalForm = () => {
+    setOpenFormModal(false);
+    setAtorParaEditar(null);
   };
 
   return (
     <Container maxWidth="xl" sx={{ mt: 3, mb: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
       {mensagem.texto && (
-        <Alert severity={mensagem.tipo} sx={{ mb: 3, flexShrink: 0 }} onClose={() => setMensagem({ texto: '', tipo: 'info' })}>
+        <Alert 
+          severity={mensagem.tipo} 
+          sx={{ mb: 3, flexShrink: 0 }} 
+          onClose={() => setMensagem({ texto: '', tipo: 'info' })}
+        >
           {mensagem.texto}
         </Alert>
       )}
 
       <Grid container spacing={3} sx={{ flexGrow: 1, overflow: 'hidden' }}>
-        <Grid item xs={12} md={4} sx={{ height: isMobile ? 'auto' : '100%', overflowY: isMobile ? 'visible' : 'auto' }}>
-          <Paper sx={{ p: 3, borderRadius: 2, position: isMobile ? 'static' : 'sticky', top: '0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            {!mostrarInativos ? (
-              <>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                    {editandoId ? 'Editar Registro' : 'Novo Ator'}
-                  </Typography>
-                  <Tooltip title="Sobre este painel">
-                    <IconButton size="small" onClick={() => setOpenHelp(true)}>
-                      <HelpIcon fontSize="small" color="action" />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-                <Box component="form" onSubmit={salvarAtor} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <TextField label="Nome da Instituição/Empresa" fullWidth value={nome} onChange={(e) => setNome(e.target.value)} required variant="filled" />
-                  <FormControl fullWidth required variant="filled">
-                    <InputLabel>Tipo de Hélice</InputLabel>
-                    <Select value={tipoHelice} label="Tipo de Hélice" onChange={(e) => setTipoHelice(e.target.value)}>
-                      <MenuItem value="UNIVERSIDADE">Universidade</MenuItem>
-                      <MenuItem value="INDUSTRIA">Indústria</MenuItem>
-                      <MenuItem value="GOVERNO">Governo</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <Button type="submit" variant="contained" color="primary" fullWidth sx={{ height: '48px', mt: 1 }}>
-                    {editandoId ? 'Salvar Alterações' : 'Cadastrar no Sistema'}
-                  </Button>
-                  {editandoId && <Button variant="text" color="secondary" onClick={limparFormulario} fullWidth>Cancelar Edição</Button>}
-                </Box>
-                
-                <Divider sx={{ my: 3 }} />
-                
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  color="inherit"
-                  startIcon={<InventoryIcon />}
-                  onClick={() => setMostrarInativos(true)}
-                  sx={{ borderColor: 'divider', color: 'text.secondary' }}
-                >
-                  Visualizar Itens Arquivados
-                </Button>
-              </>
-            ) : (
-              <>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <IconButton onClick={() => setMostrarInativos(false)} sx={{ mr: 1 }}>
-                    <BackIcon />
-                  </IconButton>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>Itens Arquivados</Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  Você está visualizando registros inativos. Utilize o ícone de restauração na tabela para reativá-los.
-                </Typography>
-                <Alert severity="warning" variant="outlined">
-                  Registros arquivados não aparecem no motor de matchmaking.
-                </Alert>
-              </>
-            )}
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={8} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <Paper sx={{ mb: 2, borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', flexShrink: 0 }}>
-            <TextField
-              fullWidth
-              variant="standard"
-              placeholder="Pesquisar por nome ou categoria..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              sx={{ px: 2, py: 1.5 }}
-              InputProps={{ 
-                disableUnderline: true,
-                startAdornment: (<InputAdornment position="start"><SearchIcon color="disabled" /></InputAdornment>), 
-              }}
+        {!isMobile && (
+          <Grid item xs={12} md={4}>
+            <FormularioAtor
+              atorParaEditar={atorParaEditar}
+              aoSucesso={carregarAtores}
+              aoCancelar={() => setAtorParaEditar(null)}
+              mostrarInativos={mostrarInativos}
+              setMostrarInativos={setMostrarInativos}
+              onOpenHelp={() => setOpenHelp(true)}
+              setMensagem={setMensagem}
             />
-          </Paper>
+          </Grid>
+        )}
 
-          <TableContainer 
-            component={Paper} 
-            sx={{ 
-              borderRadius: 2, 
-              boxShadow: '0 4px 12px rgba(0,0,0,0.05)', 
-              maxHeight: isMobile ? '400px' : 'calc(100vh - 220px)',
-              overflowY: 'auto' 
-            }}
-          >
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f8fafc', width: '80px' }}>
-                    <TableSortLabel active={sortConfig.key === 'id'} direction={sortConfig.key === 'id' ? sortConfig.direction : 'asc'} onClick={() => requestSort('id')}>ID</TableSortLabel>
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f8fafc' }}>
-                    <TableSortLabel active={sortConfig.key === 'nome'} direction={sortConfig.key === 'nome' ? sortConfig.direction : 'asc'} onClick={() => requestSort('nome')}>Instituição / Empresa</TableSortLabel>
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f8fafc', width: '160px' }}>
-                    <TableSortLabel active={sortConfig.key === 'tipo_helice'} direction={sortConfig.key === 'tipo_helice' ? sortConfig.direction : 'asc'} onClick={() => requestSort('tipo_helice')}>Hélice</TableSortLabel>
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 'bold', backgroundColor: '#f8fafc', width: '120px' }}>Ações</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {processedData.map(ator => {
-                  const style = getHeliceStyle(ator.tipo_helice);
-                  return (
-                    <TableRow key={ator.id} hover>
-                      <TableCell sx={{ color: 'text.secondary' }}>#{ator.id}</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>{ator.nome}</TableCell>
-                      <TableCell>
-                        <Chip label={style.label} color={style.color} variant="soft" size="small" sx={{ fontWeight: 600 }} />
-                      </TableCell>
-                      <TableCell align="right">
-                        {mostrarInativos ? (
-                          <Tooltip title="Restaurar Registro">
-                            <IconButton size="small" color="success" onClick={() => restaurarAtor(ator.id)}>
-                              <RestoreIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        ) : (
-                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-                            <Tooltip title="Editar">
-                              <IconButton size="small" color="primary" onClick={() => prepararEdicao(ator)}>
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Arquivar">
-                              <IconButton size="small" color="error" onClick={() => inativarAtor(ator.id)}>
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
+        <Grid item xs={12} md={isMobile ? 12 : 8} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          {isMobile && !mostrarInativos && (
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+              <Button 
+                variant="contained" 
+                startIcon={<AddIcon />} 
+                onClick={() => setOpenFormModal(true)}
+                fullWidth
+              >
+                Novo Ator
+              </Button>
+            </Box>
+          )}
+          
+          <TabelaAtores
+            dados={atores}
+            aoEditar={setAtorParaEditar}
+            aoInativar={inativarAtor}
+            aoRestaurar={restaurarAtor}
+            mostrarInativos={mostrarInativos}
+          />
         </Grid>
       </Grid>
+
+      <Dialog 
+        open={isMobile && openFormModal} 
+        onClose={fecharModalForm} 
+        fullScreen={isMobile}
+      >
+        <DialogTitle sx={{ fontWeight: 700, bgcolor: 'primary.main', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {atorParaEditar ? 'Editar Ator' : 'Novo Ator'}
+          <Button onClick={fecharModalForm} sx={{ color: 'white' }}>Fechar</Button>
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <FormularioAtor
+            atorParaEditar={atorParaEditar}
+            aoSucesso={() => {
+              carregarAtores();
+              fecharModalForm();
+            }}
+            aoCancelar={fecharModalForm}
+            mostrarInativos={mostrarInativos}
+            setMostrarInativos={setMostrarInativos}
+            onOpenHelp={() => setOpenHelp(true)}
+            setMensagem={setMensagem}
+          />
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={openHelp} onClose={() => setOpenHelp(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ fontWeight: 700, color: 'primary.main' }}>
           Gestão do Ecossistema
