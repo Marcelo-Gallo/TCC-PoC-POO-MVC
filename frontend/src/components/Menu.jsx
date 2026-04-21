@@ -1,76 +1,153 @@
-import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Button, Box, Avatar, Chip } from '@mui/material';
-import { getUsuarioLogado } from '../utils/auth';
+import React, { useState } from 'react';
+import { 
+  AppBar, 
+  Toolbar, 
+  Typography, 
+  Button, 
+  Box, 
+  IconButton, 
+  Drawer, 
+  List, 
+  ListItem, 
+  ListItemText, 
+  Avatar, 
+  Menu as MuiMenu, 
+  MenuItem, 
+  useTheme, 
+  useMediaQuery 
+} from '@mui/material';
+import { 
+  Menu as MenuIcon, 
+  ChevronLeft as ChevronLeftIcon,
+  AccountCircle 
+} from '@mui/icons-material';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Menu = () => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const location = useLocation();
   const navigate = useNavigate();
-  const usuario = getUsuarioLogado();
+
+  const menuItems = [
+    { text: 'Atores', path: '/atores' },
+    { text: 'Gestores', path: '/gestores' },
+    { text: 'Demandas', path: '/demandas' },
+    { text: 'Expertises', path: '/expertises' },
+    { text: 'Matchmaking', path: '/matchmaking' },
+  ];
+
+  const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
+  
+  const handleProfileMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleProfileMenuClose = () => setAnchorEl(null);
 
   const handleLogout = () => {
+    handleProfileMenuClose();
     localStorage.removeItem('token');
     navigate('/login');
   };
 
-  const navLinkStyle = ({ isActive }) => ({
-    textDecoration: 'none',
-    color: isActive ? '#2563eb' : '#475569',
-    fontWeight: isActive ? 700 : 500,
-    borderBottom: isActive ? '3px solid #2563eb' : '3px solid transparent',
-    padding: '6px 4px',
-    transition: 'all 0.2s',
-  });
-
-  const inicial = usuario?.nome ? usuario.nome.charAt(0).toUpperCase() : 'G';
-
-  return (
-    <AppBar position="sticky" elevation={0} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #e2e8f0' }}>
-      <Toolbar sx={{ maxWidth: '1200px', width: '100%', margin: '0 auto' }}>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mr: 4 }}>
-          <img 
-            src="/TH.svg" 
-            alt="InovaHelix Logo" 
-            style={{ width: '32px', height: '32px' }} 
-          />
-          <Typography variant="h6" component="div" sx={{ fontWeight: 900, color: 'primary.main', letterSpacing: '-0.5px' }}>
+  const drawer = (
+    <Box sx={{ width: 280, pt: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <img src="/TH.svg" alt="Logo" style={{ height: '30px' }} />
+          <Typography variant="h6" sx={{ fontWeight: 800, color: 'primary.main', fontSize: '1.1rem' }}>
             InovaHelix
           </Typography>
         </Box>
+        <IconButton onClick={handleDrawerToggle}><ChevronLeftIcon /></IconButton>
+      </Box>
+      <List>
+        {menuItems.map((item) => (
+          <ListItem 
+            button 
+            key={item.text} 
+            component={Link} 
+            to={item.path} 
+            onClick={handleDrawerToggle}
+            selected={location.pathname === item.path}
+            sx={{
+              mx: 1,
+              borderRadius: 1,
+              '&.Mui-selected': { backgroundColor: 'primary.light', '& .MuiListItemText-primary': { color: 'primary.main', fontWeight: 700 } }
+            }}
+          >
+            <ListItemText primary={item.text} />
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
 
-        <Box sx={{ flexGrow: 1, display: 'flex', gap: 3 }}>
-          <NavLink to="/gestores" style={navLinkStyle}>Equipe</NavLink>
-          <NavLink to="/atores" style={navLinkStyle}>Atores</NavLink>
-          <NavLink to="/demandas" style={navLinkStyle}>Demandas</NavLink>
-          <NavLink to="/expertises" style={navLinkStyle}>Expertises</NavLink>
-          <NavLink to="/matchmaking" style={navLinkStyle}>Matchmaking (IA)</NavLink>
-        </Box>
-
-        {usuario && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mr: 3, borderLeft: '1px solid #e2e8f0', pl: 3 }}>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: usuario.is_master ? '#f59e0b' : 'primary.main', fontSize: '14px', fontWeight: 'bold' }}>
-              {inicial}
-            </Avatar>
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <Typography variant="caption" sx={{ fontWeight: 'bold', lineHeight: 1, color: '#1e293b' }}>
-                Olá, {usuario.nome.split(' ')[0]}
-              </Typography>
-              <Chip 
-                label={usuario.is_master ? "Master" : "Admin"} 
-                size="small" 
-                color={usuario.is_master ? "warning" : "default"}
-                sx={{ height: '16px', fontSize: '0.6rem', mt: 0.5, fontWeight: 'bold' }} 
-              />
+  return (
+    <>
+      <AppBar position="sticky" elevation={0} sx={{ borderBottom: '1px solid', borderColor: 'divider', backgroundColor: 'background.paper', color: 'text.primary' }}>
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {isMobile && (
+              <IconButton color="inherit" edge="start" onClick={handleDrawerToggle} sx={{ mr: 1 }}><MenuIcon /></IconButton>
+            )}
+            <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textDecoration: 'none', color: 'inherit' }}>
+              <img src="/TH.svg" alt="InovaHelix Logo" style={{ height: '35px' }} />
+              {!isMobile && (
+                <Typography variant="h6" noWrap sx={{ fontWeight: 800, color: 'primary.main', letterSpacing: '-0.5px' }}>
+                  InovaHelix
+                </Typography>
+              )}
             </Box>
           </Box>
-        )}
 
-        <Button variant="outlined" color="error" size="small" onClick={handleLogout} sx={{ borderWidth: 2, '&:hover': { borderWidth: 2 } }}>
-          Sair
-        </Button>
+          {!isMobile && (
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              {menuItems.map((item) => (
+                <Button 
+                  key={item.text} 
+                  component={Link} 
+                  to={item.path} 
+                  sx={{ 
+                    px: 2,
+                    fontWeight: location.pathname === item.path ? 700 : 500,
+                    color: location.pathname === item.path ? 'primary.main' : 'text.secondary',
+                    borderBottom: location.pathname === item.path ? '2px solid' : '2px solid transparent',
+                    borderColor: 'primary.main',
+                    borderRadius: 0,
+                    '&:hover': { backgroundColor: 'transparent', color: 'primary.main' }
+                  }}
+                >
+                  {item.text}
+                </Button>
+              ))}
+            </Box>
+          )}
 
-      </Toolbar>
-    </AppBar>
+          <Box>
+            <IconButton onClick={handleProfileMenuOpen} sx={{ p: 0.5, border: '2px solid', borderColor: 'divider' }}>
+              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
+                <AccountCircle fontSize="small" />
+              </Avatar>
+            </IconButton>
+            <MuiMenu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleProfileMenuClose}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              PaperProps={{ sx: { mt: 1.5, minWidth: 150, boxShadow: '0 4px 20px rgba(0,0,0,0.1)', borderRadius: 2 } }}
+            >
+              <MenuItem onClick={handleProfileMenuClose} component={Link} to="/perfil" sx={{ fontSize: '0.875rem' }}>Meu Perfil</MenuItem>
+              <Divider />
+              <MenuItem onClick={handleLogout} sx={{ fontSize: '0.875rem', color: 'error.main' }}>Sair do Sistema</MenuItem>
+            </MuiMenu>
+          </Box>
+        </Toolbar>
+      </AppBar>
+      <Drawer anchor="left" open={mobileOpen} onClose={handleDrawerToggle}>{drawer}</Drawer>
+    </>
   );
 };
 
