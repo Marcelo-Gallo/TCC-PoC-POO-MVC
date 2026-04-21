@@ -9,7 +9,7 @@ const theme = createTheme({
       main: '#475569',
     },
     background: {
-      default: '#f8fafc',
+      default: '#f1f5f9',
       paper: '#ffffff',
     },
   },
@@ -21,7 +21,28 @@ const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 8,
+    borderRadius: 12,
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          scrollbarColor: "#cbd5e1 #f8fafc",
+          "&::-webkit-scrollbar, & *::-webkit-scrollbar": {
+            width: "8px",
+            height: "8px",
+          },
+          "&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb": {
+            borderRadius: 8,
+            backgroundColor: "#cbd5e1",
+            minHeight: 24,
+          },
+          "&::-webkit-scrollbar-thumb:hover, & *::-webkit-scrollbar-thumb:hover": {
+            backgroundColor: "#94a3b8",
+          },
+        },
+      },
+    },
   },
 });
 
