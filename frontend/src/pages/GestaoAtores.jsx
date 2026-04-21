@@ -23,7 +23,15 @@ import {
   Grid,
   Tooltip,
   TableSortLabel,
-  InputAdornment
+  InputAdornment,
+  useTheme,
+  useMediaQuery,
+  Chip,
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -31,16 +39,21 @@ import {
   RestoreFromTrash as RestoreIcon,
   ArrowBack as BackIcon,
   Inventory as InventoryIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  HelpOutline as HelpIcon
 } from '@mui/icons-material';
 
 const GestaoAtores = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
   const [atores, setAtores] = useState([]);
   const [nome, setNome] = useState('');
   const [tipoHelice, setTipoHelice] = useState('UNIVERSIDADE');
   const [editandoId, setEditandoId] = useState(null);
   const [mensagem, setMensagem] = useState({ texto: '', tipo: 'info' });
   const [mostrarInativos, setMostrarInativos] = useState(false);
+  const [openHelp, setOpenHelp] = useState(false);
 
   const {
     processedData,
@@ -120,184 +133,195 @@ const GestaoAtores = () => {
     setEditandoId(null);
   };
 
-  return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 800, color: 'text.primary' }}>
-          Gestão do Ecossistema (Tríplice Hélice)
-        </Typography>
-        <Button
-          variant="outlined"
-          color={mostrarInativos ? "secondary" : "warning"}
-          startIcon={mostrarInativos ? <BackIcon /> : <InventoryIcon />}
-          onClick={() => setMostrarInativos(!mostrarInativos)}
-        >
-          {mostrarInativos ? 'Voltar' : 'Ver Lixeira'}
-        </Button>
-      </Box>
+  const getHeliceStyle = (tipo) => {
+    switch (tipo) {
+      case 'UNIVERSIDADE': return { color: 'info', label: 'Universidade' };
+      case 'INDUSTRIA': return { color: 'warning', label: 'Indústria' };
+      case 'GOVERNO': return { color: 'success', label: 'Governo' };
+      default: return { color: 'default', label: tipo };
+    }
+  };
 
+  return (
+    <Container maxWidth="xl" sx={{ mt: 3, mb: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
       {mensagem.texto && (
-        <Alert severity={mensagem.tipo} sx={{ mb: 3 }} onClose={() => setMensagem({ texto: '', tipo: 'info' })}>
+        <Alert severity={mensagem.tipo} sx={{ mb: 3, flexShrink: 0 }} onClose={() => setMensagem({ texto: '', tipo: 'info' })}>
           {mensagem.texto}
         </Alert>
       )}
 
-      <Grid container spacing={4} alignItems="flex-start">
-        <Grid item xs={12} md={4} ref={formRef}>
-          {!mostrarInativos ? (
-            <Paper sx={{ p: 3, borderRadius: 2, position: 'sticky', top: '100px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>
-                {editandoId ? 'Editar Instituição/Empresa' : 'Cadastrar Novo Ator'}
-              </Typography>
-              <Box component="form" onSubmit={salvarAtor} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField
-                  label="Nome da Instituição/Empresa"
-                  fullWidth
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  required
-                />
-                <FormControl fullWidth required>
-                  <InputLabel>Tipo de Hélice</InputLabel>
-                  <Select
-                    value={tipoHelice}
-                    label="Tipo de Hélice"
-                    onChange={(e) => setTipoHelice(e.target.value)}
-                  >
-                    <MenuItem value="UNIVERSIDADE">Universidade</MenuItem>
-                    <MenuItem value="INDUSTRIA">Indústria</MenuItem>
-                    <MenuItem value="GOVERNO">Governo</MenuItem>
-                  </Select>
-                </FormControl>
-                <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                  <Button type="submit" variant="contained" color="success" fullWidth sx={{ height: '56px' }}>
-                    {editandoId ? 'Atualizar' : 'Cadastrar'}
-                  </Button>
-                  {editandoId && (
-                    <Button variant="outlined" color="secondary" onClick={limparFormulario} fullWidth sx={{ height: '56px' }}>
-                      Cancelar
-                    </Button>
-                  )}
+      <Grid container spacing={3} sx={{ flexGrow: 1, overflow: 'hidden' }}>
+        <Grid item xs={12} md={4} sx={{ height: isMobile ? 'auto' : '100%', overflowY: isMobile ? 'visible' : 'auto' }}>
+          <Paper sx={{ p: 3, borderRadius: 2, position: isMobile ? 'static' : 'sticky', top: '0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+            {!mostrarInativos ? (
+              <>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                    {editandoId ? 'Editar Registro' : 'Novo Ator'}
+                  </Typography>
+                  <Tooltip title="Sobre este painel">
+                    <IconButton size="small" onClick={() => setOpenHelp(true)}>
+                      <HelpIcon fontSize="small" color="action" />
+                    </IconButton>
+                  </Tooltip>
                 </Box>
-              </Box>
-            </Paper>
-          ) : (
-             <Paper sx={{ p: 3, borderRadius: 2, backgroundColor: '#fef2f2', border: '1px solid #fca5a5' }}>
-                <Typography variant="h6" color="error" sx={{ fontWeight: 700 }}>
-                  Modo Lixeira
+                <Box component="form" onSubmit={salvarAtor} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <TextField label="Nome da Instituição/Empresa" fullWidth value={nome} onChange={(e) => setNome(e.target.value)} required variant="filled" />
+                  <FormControl fullWidth required variant="filled">
+                    <InputLabel>Tipo de Hélice</InputLabel>
+                    <Select value={tipoHelice} label="Tipo de Hélice" onChange={(e) => setTipoHelice(e.target.value)}>
+                      <MenuItem value="UNIVERSIDADE">Universidade</MenuItem>
+                      <MenuItem value="INDUSTRIA">Indústria</MenuItem>
+                      <MenuItem value="GOVERNO">Governo</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <Button type="submit" variant="contained" color="primary" fullWidth sx={{ height: '48px', mt: 1 }}>
+                    {editandoId ? 'Salvar Alterações' : 'Cadastrar no Sistema'}
+                  </Button>
+                  {editandoId && <Button variant="text" color="secondary" onClick={limparFormulario} fullWidth>Cancelar Edição</Button>}
+                </Box>
+                
+                <Divider sx={{ my: 3 }} />
+                
+                <Button
+                  variant="outlined"
+                  fullWidth
+                  color="inherit"
+                  startIcon={<InventoryIcon />}
+                  onClick={() => setMostrarInativos(true)}
+                  sx={{ borderColor: 'divider', color: 'text.secondary' }}
+                >
+                  Visualizar Itens Arquivados
+                </Button>
+              </>
+            ) : (
+              <>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <IconButton onClick={() => setMostrarInativos(false)} sx={{ mr: 1 }}>
+                    <BackIcon />
+                  </IconButton>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>Itens Arquivados</Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Você está visualizando registros inativos. Utilize o ícone de restauração na tabela para reativá-los.
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Você está visualizando os registros inativos. Restaure um ator na tabela ao lado para poder editá-lo novamente.
-                </Typography>
-             </Paper>
-          )}
+                <Alert severity="warning" variant="outlined">
+                  Registros arquivados não aparecem no motor de matchmaking.
+                </Alert>
+              </>
+            )}
+          </Paper>
         </Grid>
 
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ mb: 2, p: 2, borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+        <Grid item xs={12} md={8} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <Paper sx={{ mb: 2, borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', flexShrink: 0 }}>
             <TextField
               fullWidth
-              variant="outlined"
-              placeholder="Buscar por ID, Nome ou Hélice..."
+              variant="standard"
+              placeholder="Pesquisar por nome ou categoria..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon color="action" />
-                  </InputAdornment>
-                ),
+              sx={{ px: 2, py: 1.5 }}
+              InputProps={{ 
+                disableUnderline: true,
+                startAdornment: (<InputAdornment position="start"><SearchIcon color="disabled" /></InputAdornment>), 
               }}
             />
           </Paper>
 
-          <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <Table>
-              <TableHead sx={{ backgroundColor: '#f8fafc' }}>
+          <TableContainer 
+            component={Paper} 
+            sx={{ 
+              borderRadius: 2, 
+              boxShadow: '0 4px 12px rgba(0,0,0,0.05)', 
+              maxHeight: isMobile ? '400px' : 'calc(100vh - 220px)',
+              overflowY: 'auto' 
+            }}
+          >
+            <Table stickyHeader>
+              <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold' }}>
-                    <TableSortLabel
-                      active={sortConfig.key === 'id'}
-                      direction={sortConfig.key === 'id' ? sortConfig.direction : 'asc'}
-                      onClick={() => requestSort('id')}
-                    >
-                      ID
-                    </TableSortLabel>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f8fafc', width: '80px' }}>
+                    <TableSortLabel active={sortConfig.key === 'id'} direction={sortConfig.key === 'id' ? sortConfig.direction : 'asc'} onClick={() => requestSort('id')}>ID</TableSortLabel>
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>
-                    <TableSortLabel
-                      active={sortConfig.key === 'nome'}
-                      direction={sortConfig.key === 'nome' ? sortConfig.direction : 'asc'}
-                      onClick={() => requestSort('nome')}
-                    >
-                      Nome
-                    </TableSortLabel>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f8fafc' }}>
+                    <TableSortLabel active={sortConfig.key === 'nome'} direction={sortConfig.key === 'nome' ? sortConfig.direction : 'asc'} onClick={() => requestSort('nome')}>Instituição / Empresa</TableSortLabel>
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>
-                    <TableSortLabel
-                      active={sortConfig.key === 'tipo_helice'}
-                      direction={sortConfig.key === 'tipo_helice' ? sortConfig.direction : 'asc'}
-                      onClick={() => requestSort('tipo_helice')}
-                    >
-                      Hélice
-                    </TableSortLabel>
+                  <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f8fafc', width: '160px' }}>
+                    <TableSortLabel active={sortConfig.key === 'tipo_helice'} direction={sortConfig.key === 'tipo_helice' ? sortConfig.direction : 'asc'} onClick={() => requestSort('tipo_helice')}>Hélice</TableSortLabel>
                   </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>Ações</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 'bold', backgroundColor: '#f8fafc', width: '120px' }}>Ações</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {processedData.map(ator => (
-                  <TableRow key={ator.id} hover>
-                    <TableCell>#{ator.id}</TableCell>
-                    <TableCell sx={{ fontWeight: 500 }}>{ator.nome}</TableCell>
-                    <TableCell>
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          fontWeight: 'bold',
-                          color: ator.tipo_helice === 'UNIVERSIDADE' ? '#0ea5e9' : 
-                                 ator.tipo_helice === 'INDUSTRIA' ? '#f59e0b' : '#10b981'
-                        }}
-                      >
-                        {ator.tipo_helice}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      {mostrarInativos ? (
-                        <Tooltip title="Restaurar">
-                          <IconButton color="success" onClick={() => restaurarAtor(ator.id)}>
-                            <RestoreIcon />
-                          </IconButton>
-                        </Tooltip>
-                      ) : (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                          <Tooltip title="Editar">
-                            <IconButton color="primary" onClick={() => prepararEdicao(ator)}>
-                              <EditIcon />
+                {processedData.map(ator => {
+                  const style = getHeliceStyle(ator.tipo_helice);
+                  return (
+                    <TableRow key={ator.id} hover>
+                      <TableCell sx={{ color: 'text.secondary' }}>#{ator.id}</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>{ator.nome}</TableCell>
+                      <TableCell>
+                        <Chip label={style.label} color={style.color} variant="soft" size="small" sx={{ fontWeight: 600 }} />
+                      </TableCell>
+                      <TableCell align="right">
+                        {mostrarInativos ? (
+                          <Tooltip title="Restaurar Registro">
+                            <IconButton size="small" color="success" onClick={() => restaurarAtor(ator.id)}>
+                              <RestoreIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Inativar">
-                            <IconButton color="error" onClick={() => inativarAtor(ator.id)}>
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {processedData.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                      Nenhum resultado encontrado.
-                    </TableCell>
-                  </TableRow>
-                )}
+                        ) : (
+                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+                            <Tooltip title="Editar">
+                              <IconButton size="small" color="primary" onClick={() => prepararEdicao(ator)}>
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Arquivar">
+                              <IconButton size="small" color="error" onClick={() => inativarAtor(ator.id)}>
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>
         </Grid>
       </Grid>
+      <Dialog open={openHelp} onClose={() => setOpenHelp(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 700, color: 'primary.main' }}>
+          Gestão do Ecossistema
+        </DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body1" paragraph>
+            Este painel gerencia as entidades que compõem a <strong>Tríplice Hélice</strong>, formando a base de dados para o algoritmo de inovação.
+          </Typography>
+          <Box component="ul" sx={{ pl: 2, mb: 2, typography: 'body2', color: 'text.secondary' }}>
+            <li style={{ marginBottom: '8px' }}>
+              <Typography variant="body2" component="span" fontWeight="bold" color="info.main">Universidades:</Typography> Instituições de ensino e pesquisa provedoras de expertise.
+            </li>
+            <li style={{ marginBottom: '8px' }}>
+              <Typography variant="body2" component="span" fontWeight="bold" color="warning.main">Indústrias:</Typography> Empresas e setor produtivo com demandas tecnológicas reais.
+            </li>
+            <li style={{ marginBottom: '8px' }}>
+              <Typography variant="body2" component="span" fontWeight="bold" color="success.main">Governo:</Typography> Órgãos públicos, prefeituras e entidades de fomento com demandas.
+            </li>
+          </Box>
+          <Alert severity="info" sx={{ mt: 2 }}>
+            <strong>Nota sobre o Matchmaking:</strong> Apenas os atores mantidos como <em>ativos</em> neste painel poderão cadastrar demandas e expertises. Se uma instituição for arquivada, suas oportunidades deixarão de gerar "matches" no sistema.
+          </Alert>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 1 }}>
+          <Button onClick={() => setOpenHelp(false)} variant="contained" disableElevation>
+            Entendido
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
