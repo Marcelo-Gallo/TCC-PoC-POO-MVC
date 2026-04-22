@@ -15,9 +15,15 @@ import {
   Box,
   useTheme,
   useMediaQuery,
-  Fab
+  Tooltip,
+  IconButton
 } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { 
+  Add as AddIcon, 
+  Inventory as InventoryIcon, 
+  ArrowBack as BackIcon,
+  HelpOutline as HelpIcon
+} from '@mui/icons-material';
 
 const GestaoAtores = () => {
   const theme = useTheme();
@@ -106,16 +112,58 @@ const GestaoAtores = () => {
         )}
 
         <Grid item xs={12} md={isMobile ? 12 : 8} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          {isMobile && !mostrarInativos && (
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
-              <Button 
-                variant="contained" 
-                startIcon={<AddIcon />} 
-                onClick={() => setOpenFormModal(true)}
-                fullWidth
-              >
-                Novo Ator
-              </Button>
+          
+          {isMobile && (
+            <Box sx={{ mb: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
+              {!mostrarInativos ? (
+                <>
+                  <IconButton 
+                    onClick={() => setOpenHelp(true)}
+                    sx={{ 
+                      borderRadius: 1, 
+                      border: '1px solid', 
+                      borderColor: 'divider', 
+                      color: 'text.secondary',
+                      width: '48px',
+                      height: '48px'
+                    }}
+                  >
+                    <HelpIcon />
+                  </IconButton>
+                  
+                  <Tooltip title="Ver Lixeira / Arquivados">
+                    <Button 
+                      variant="outlined" 
+                      color="inherit" 
+                      onClick={() => setMostrarInativos(true)}
+                      sx={{ minWidth: '48px', height: '48px', px: 0, borderColor: 'divider', color: 'text.secondary' }}
+                    >
+                      <InventoryIcon />
+                    </Button>
+                  </Tooltip>
+                  
+                  <Button 
+                    variant="contained" 
+                    startIcon={<AddIcon />} 
+                    onClick={() => setOpenFormModal(true)}
+                    fullWidth
+                    sx={{ height: '48px' }}
+                  >
+                    Novo Ator
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  variant="outlined" 
+                  startIcon={<BackIcon />} 
+                  onClick={() => setMostrarInativos(false)}
+                  fullWidth
+                  color="inherit"
+                  sx={{ height: '48px', borderColor: 'divider', color: 'text.secondary' }}
+                >
+                  Voltar aos Ativos
+                </Button>
+              )}
             </Box>
           )}
           

@@ -131,18 +131,21 @@ const FormularioAtor = ({
             )}
           </Box>
           
-          <Divider sx={{ my: 3 }} />
-          
-          <Button
-            variant="outlined"
-            fullWidth
-            color="inherit"
-            startIcon={<InventoryIcon />}
-            onClick={() => setMostrarInativos(true)}
-            sx={{ borderColor: 'divider', color: 'text.secondary' }}
-          >
-            Visualizar Itens Arquivados
-          </Button>
+          {!isMobile && (
+            <>
+              <Divider sx={{ my: 3 }} />
+              <Button
+                variant="outlined"
+                fullWidth
+                color="inherit"
+                startIcon={<InventoryIcon />}
+                onClick={() => setMostrarInativos(true)}
+                sx={{ borderColor: 'divider', color: 'text.secondary' }}
+              >
+                Visualizar Itens Arquivados
+              </Button>
+            </>
+          )}
         </>
       ) : (
         <>
