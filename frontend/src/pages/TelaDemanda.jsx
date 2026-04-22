@@ -1,71 +1,59 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { useTableData } from '../hooks/useTableData';
+import FormularioDemanda from '../components/FormularioDemanda';
+import TabelaDemandas from '../components/TabelaDemandas';
 import {
   Container,
-  Typography,
-  Box,
-  TextField,
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  IconButton,
   Alert,
   Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Typography,
+  Box,
+  useTheme,
+  useMediaQuery,
   Tooltip,
-  TableSortLabel,
-  InputAdornment
+  IconButton
 } from '@mui/material';
-import {
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  RestoreFromTrash as RestoreIcon,
+import { 
+  Add as AddIcon, 
+  Inventory as InventoryIcon, 
   ArrowBack as BackIcon,
-  Inventory as InventoryIcon,
-  Search as SearchIcon
+  HelpOutline as HelpIcon
 } from '@mui/icons-material';
 
 const TelaDemanda = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
   const [demandas, setDemandas] = useState([]);
   const [atores, setAtores] = useState([]);
-  const [titulo, setTitulo] = useState('');
-  const [descricao, setDescricao] = useState('');
-  const [atorId, setAtorId] = useState('');
-  const [areaCnpq, setAreaCnpq] = useState('');
-  const [editandoId, setEditandoId] = useState(null);
+  const [demandaParaEditar, setDemandaParaEditar] = useState(null);
   const [mensagem, setMensagem] = useState({ texto: '', tipo: 'info' });
   const [mostrarInativos, setMostrarInativos] = useState(false);
-
-  const {
-    processedData,
-    searchQuery,
-    setSearchQuery,
-    sortConfig,
-    requestSort
-  } = useTableData(demandas, 'id');
-
-  const formRef = useRef(null);
+  const [openHelp, setOpenHelp] = useState(false);
+  const [openFormModal, setOpenFormModal] = useState(false);
 
   useEffect(() => {
     carregarDemandas();
     carregarAtores();
   }, [mostrarInativos]);
 
+  useEffect(() => {
+    if (demandaParaEditar) {
+      setOpenFormModal(true);
+    }
+  }, [demandaParaEditar]);
+
   const carregarDemandas = async () => {
     try {
       const response = await api.get(`/demandas?mostrar_inativos=${mostrarInativos}`);
       setDemandas(response.data);
     } catch (error) {
-      setMensagem({ texto: 'Erro ao carregar as demandas.', tipo: 'error' });
+      setMensagem({ texto: 'Erro ao carregar a lista de demandas.', tipo: 'error' });
     }
   };
 
@@ -75,43 +63,8 @@ const TelaDemanda = () => {
       const resInativos = await api.get('/atores?mostrar_inativos=true');
       setAtores([...resAtivos.data, ...resInativos.data]);
     } catch (error) {
-      setMensagem({ texto: 'Erro ao carregar os atores.', tipo: 'error' });
+      setMensagem({ texto: 'Erro ao carregar os atores para o formulário.', tipo: 'error' });
     }
-  };
-
-  const salvarDemanda = async (e) => {
-    e.preventDefault();
-    try {
-      const payload = {
-        titulo,
-        descricao,
-        ator_id: parseInt(atorId),
-        area_cnpq: areaCnpq
-      };
-
-      if (editandoId) {
-        await api.put(`/demandas/${editandoId}`, payload);
-        setMensagem({ texto: 'Demanda atualizada com sucesso!', tipo: 'success' });
-      } else {
-        await api.post('/demandas', payload);
-        setMensagem({ texto: 'Demanda registada com sucesso!', tipo: 'success' });
-      }
-      limparFormulario();
-      carregarDemandas();
-    } catch (error) {
-      setMensagem({ texto: error.response?.data?.detail || 'Erro ao guardar a demanda.', tipo: 'error' });
-    }
-  };
-
-  const prepararEdicao = (demanda) => {
-    setEditandoId(demanda.id);
-    setTitulo(demanda.titulo);
-    setDescricao(demanda.descricao);
-    setAtorId(demanda.ator_id);
-    setAreaCnpq(demanda.area_cnpq);
-    setMensagem({ texto: '', tipo: 'info' });
-
-    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const inativarDemanda = async (id) => {
@@ -138,205 +91,160 @@ const TelaDemanda = () => {
     }
   };
 
-  const limparFormulario = () => {
-    setTitulo('');
-    setDescricao('');
-    setAtorId('');
-    setAreaCnpq('');
-    setEditandoId(null);
+  const fecharModalForm = () => {
+    setOpenFormModal(false);
+    setDemandaParaEditar(null);
   };
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 800, color: 'text.primary' }}>
-          Gestão de Demandas
-        </Typography>
-        <Button
-          variant="outlined"
-          color={mostrarInativos ? "secondary" : "warning"}
-          startIcon={mostrarInativos ? <BackIcon /> : <InventoryIcon />}
-          onClick={() => setMostrarInativos(!mostrarInativos)}
-        >
-          {mostrarInativos ? 'Voltar' : 'Ver Lixeira'}
-        </Button>
-      </Box>
-
+    <Container maxWidth="xl" sx={{ mt: 3, mb: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
       {mensagem.texto && (
-        <Alert severity={mensagem.tipo} sx={{ mb: 3 }} onClose={() => setMensagem({ texto: '', tipo: 'info' })}>
+        <Alert 
+          severity={mensagem.tipo} 
+          sx={{ mb: 3, flexShrink: 0 }} 
+          onClose={() => setMensagem({ texto: '', tipo: 'info' })}
+        >
           {mensagem.texto}
         </Alert>
       )}
-      <Grid container spacing={4} alignItems="flex-start">
-        <Grid item xs={12} md={4} ref={formRef}>
-          {!mostrarInativos ? (
-            <Paper sx={{ p: 3, borderRadius: 2, position: 'sticky', top: '100px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>
-                {editandoId ? 'Editar Problema ou Oportunidade' : 'Registar Nova Demanda'}
-              </Typography>
-              <Box component="form" onSubmit={salvarDemanda} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                
-                <TextField
-                  label="Título da Demanda"
-                  fullWidth
-                  value={titulo}
-                  onChange={(e) => setTitulo(e.target.value)}
-                  required
-                />
-                
-                <TextField
-                  label="Área CNPq"
-                  fullWidth
-                  placeholder="Ex: 1.03.00.00-7"
-                  value={areaCnpq}
-                  onChange={(e) => setAreaCnpq(e.target.value)}
-                  required
-                />
-                
-                <FormControl fullWidth required>
-                  <InputLabel>Ator Vinculado (Indústria/Governo)</InputLabel>
-                  <Select
-                    value={atorId}
-                    label="Ator Vinculado (Indústria/Governo)"
-                    onChange={(e) => setAtorId(e.target.value)}
-                  >
-                    <MenuItem value="" disabled>Selecione um ator...</MenuItem>
-                    {atores.map(ator => (
-                      <MenuItem key={ator.id} value={ator.id}>
-                        {ator.nome} ({ator.tipo_helice}) {ator.is_deleted ? ' - (ARQUIVADO)' : ''}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                
-                <TextField
-                  label="Descrição Detalhada"
-                  fullWidth
-                  multiline
-                  rows={4}
-                  value={descricao}
-                  onChange={(e) => setDescricao(e.target.value)}
-                  required
-                />
-                
-                <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                  <Button type="submit" variant="contained" color="success" size="large" fullWidth>
-                    {editandoId ? 'Atualizar' : 'Registar'}
-                  </Button>
-                  {editandoId && (
-                    <Button variant="outlined" color="secondary" onClick={limparFormulario} fullWidth>
-                      Cancelar
-                    </Button>
-                  )}
-                </Box>
-              </Box>
-            </Paper>
-          ) : (
-             <Paper sx={{ p: 3, borderRadius: 2, backgroundColor: '#fef2f2', border: '1px solid #fca5a5' }}>
-                <Typography variant="h6" color="error" sx={{ fontWeight: 700 }}>
-                  Modo Lixeira
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Você está visualizando os registros inativos. Restaure uma demanda na tabela ao lado para poder editá-la novamente.
-                </Typography>
-             </Paper>
-          )}
-        </Grid>
 
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ mb: 2, p: 2, borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <TextField
-              fullWidth
-              placeholder="Buscar por ID, Título, Área ou Descrição..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
+      <Grid container spacing={3} sx={{ flexGrow: 1, overflow: 'hidden' }}>
+        {!isMobile && (
+          <Grid item xs={12} md={4}>
+            <FormularioDemanda
+              demandaParaEditar={demandaParaEditar}
+              atores={atores}
+              aoSucesso={carregarDemandas}
+              aoCancelar={() => setDemandaParaEditar(null)}
+              mostrarInativos={mostrarInativos}
+              setMostrarInativos={setMostrarInativos}
+              onOpenHelp={() => setOpenHelp(true)}
+              setMensagem={setMensagem}
             />
-          </Paper>
+          </Grid>
+        )}
 
-          <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <Table>
-              <TableHead sx={{ backgroundColor: '#f8fafc' }}>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold' }}>
-                    <TableSortLabel
-                      active={sortConfig.key === 'id'}
-                      direction={sortConfig.key === 'id' ? sortConfig.direction : 'asc'}
-                      onClick={() => requestSort('id')}
+        <Grid item xs={12} md={isMobile ? 12 : 8} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          
+          {isMobile && (
+            <Box sx={{ mb: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
+              {!mostrarInativos ? (
+                <>
+                  <IconButton 
+                    onClick={() => setOpenHelp(true)}
+                    sx={{ 
+                      borderRadius: 1, 
+                      border: '1px solid', 
+                      borderColor: 'divider', 
+                      color: 'text.secondary',
+                      width: '48px',
+                      height: '48px'
+                    }}
+                  >
+                    <HelpIcon />
+                  </IconButton>
+                  
+                  <Tooltip title="Ver Lixeira / Arquivados">
+                    <Button 
+                      variant="outlined" 
+                      color="inherit" 
+                      onClick={() => setMostrarInativos(true)}
+                      sx={{ minWidth: '48px', height: '48px', px: 0, borderColor: 'divider', color: 'text.secondary' }}
                     >
-                      ID
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>
-                    <TableSortLabel
-                      active={sortConfig.key === 'titulo'}
-                      direction={sortConfig.key === 'titulo' ? sortConfig.direction : 'asc'}
-                      onClick={() => requestSort('titulo')}
-                    >
-                      Título
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>
-                    <TableSortLabel
-                      active={sortConfig.key === 'area_cnpq'}
-                      direction={sortConfig.key === 'area_cnpq' ? sortConfig.direction : 'asc'}
-                      onClick={() => requestSort('area_cnpq')}
-                    >
-                      Área CNPq
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>Ações</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {processedData.map(demanda => (
-                  <TableRow key={demanda.id} hover>
-                    <TableCell>#{demanda.id}</TableCell>
-                    <TableCell sx={{ fontWeight: 500 }}>{demanda.titulo}</TableCell>
-                    <TableCell>{demanda.area_cnpq}</TableCell>
-                    <TableCell align="center">
-                      {mostrarInativos ? (
-                        <Tooltip title="Restaurar">
-                          <IconButton color="success" onClick={() => restaurarDemanda(demanda.id)}>
-                            <RestoreIcon />
-                          </IconButton>
-                        </Tooltip>
-                      ) : (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                          <Tooltip title="Editar">
-                            <IconButton color="primary" onClick={() => prepararEdicao(demanda)}>
-                              <EditIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Inativar">
-                            <IconButton color="error" onClick={() => inativarDemanda(demanda.id)}>
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {processedData.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                      Nenhum resultado encontrado.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                      <InventoryIcon />
+                    </Button>
+                  </Tooltip>
+                  
+                  <Button 
+                    variant="contained" 
+                    startIcon={<AddIcon />} 
+                    onClick={() => setOpenFormModal(true)}
+                    fullWidth
+                    sx={{ height: '48px' }}
+                  >
+                    Nova Demanda
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  variant="outlined" 
+                  startIcon={<BackIcon />} 
+                  onClick={() => setMostrarInativos(false)}
+                  fullWidth
+                  color="inherit"
+                  sx={{ height: '48px', borderColor: 'divider', color: 'text.secondary' }}
+                >
+                  Voltar aos Ativos
+                </Button>
+              )}
+            </Box>
+          )}
+          
+          <TabelaDemandas
+            dados={demandas}
+            aoEditar={setDemandaParaEditar}
+            aoInativar={inativarDemanda}
+            aoRestaurar={restaurarDemanda}
+            mostrarInativos={mostrarInativos}
+          />
         </Grid>
-
       </Grid>
+
+      <Dialog 
+        open={isMobile && openFormModal} 
+        onClose={fecharModalForm} 
+        fullScreen={isMobile}
+      >
+        <DialogTitle sx={{ fontWeight: 700, bgcolor: 'primary.main', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {demandaParaEditar ? 'Editar Demanda' : 'Nova Demanda'}
+          <Button onClick={fecharModalForm} sx={{ color: 'white' }}>Fechar</Button>
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <FormularioDemanda
+            demandaParaEditar={demandaParaEditar}
+            atores={atores}
+            aoSucesso={() => {
+              carregarDemandas();
+              fecharModalForm();
+            }}
+            aoCancelar={fecharModalForm}
+            mostrarInativos={mostrarInativos}
+            setMostrarInativos={setMostrarInativos}
+            onOpenHelp={() => setOpenHelp(true)}
+            setMensagem={setMensagem}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openHelp} onClose={() => setOpenHelp(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 700, color: 'primary.main' }}>
+          Gestão de Demandas Tecnológicas
+        </DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body1" paragraph>
+            As demandas representam problemas, dores ou oportunidades identificadas por <strong>Indústrias</strong> ou pelo <strong>Governo</strong> que necessitam de solução técnica ou científica.
+          </Typography>
+          <Box component="ul" sx={{ pl: 2, mb: 2, typography: 'body2', color: 'text.secondary' }}>
+            <li style={{ marginBottom: '8px' }}>
+              <strong>Mapeamento:</strong> O gestor cadastra a demanda vinculando-a a um Ator específico do ecossistema.
+            </li>
+            <li style={{ marginBottom: '8px' }}>
+              <strong>Classificação CNPq:</strong> A utilização das áreas do CNPq permite que o motor de matchmaking encontre expertises acadêmicas com linguagens similares.
+            </li>
+            <li style={{ marginBottom: '8px' }}>
+              <strong>Descrição Semântica:</strong> Quanto mais detalhada a descrição, melhor será o processamento de linguagem natural para gerar o "match" perfeito.
+            </li>
+          </Box>
+          <Alert severity="info" sx={{ mt: 2 }}>
+            <strong>Fluxo de Inovação:</strong> Após cadastradas, estas demandas são comparadas com as expertises das universidades no menu "Matchmaking (IA)".
+          </Alert>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 1 }}>
+          <Button onClick={() => setOpenHelp(false)} variant="contained" disableElevation>
+            Entendido
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
