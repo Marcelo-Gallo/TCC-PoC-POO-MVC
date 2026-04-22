@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import TabelaRanking from '../components/TabelaRanking';
 import GestaoPortfolio from '../components/GestaoPortfolio';
 import {
   Container,
@@ -10,32 +11,34 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
   Alert,
   Grid,
-  Chip,
   Dialog,
   CircularProgress,
-  Link
+  useTheme,
+  useMediaQuery,
+  IconButton,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import {
   AutoAwesome as AutoAwesomeIcon,
-  Launch as LaunchIcon
+  HelpOutline as HelpIcon
 } from '@mui/icons-material';
 
 const TelaMatchmaking = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
   const [demandas, setDemandas] = useState([]);
   const [demandaSelecionada, setDemandaSelecionada] = useState('');
   const [resultados, setResultados] = useState(null);
   const [carregando, setCarregando] = useState(false);
   const [mensagem, setMensagem] = useState({ texto: '', tipo: 'info' });
   const [expertiseSelecionada, setExpertiseSelecionada] = useState(null);
+  const [openHelp, setOpenHelp] = useState(false);
 
   useEffect(() => {
     carregarDemandas();
@@ -75,125 +78,43 @@ const TelaMatchmaking = () => {
     }
   };
 
-  const renderTabela = (titulo, metricas, corDestaque, isPrimary = false) => (
-    <Paper sx={{ p: 3, height: '100%', borderRadius: 2, borderTop: `4px solid ${corDestaque}` }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 800, color: 'text.primary' }}>
-          {titulo}
-        </Typography>
-        <Chip 
-          label={`⏱️ ${metricas.tempo_execucao_segundos}s`} 
-          size="small" 
-          sx={{ fontWeight: 'bold', backgroundColor: '#f1f5f9' }} 
-        />
-      </Box>
-      
-      {metricas.resultados.length > 0 ? (
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow sx={{ backgroundColor: '#f8fafc' }}>
-                <TableCell sx={{ fontWeight: 'bold', width: '60px' }}>Rank</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>Investigador / Interseção</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 'bold' }}>Score</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 'bold' }}>Ações</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {metricas.resultados.map((resultado, index) => (
-                <TableRow key={index} hover>
-                  <TableCell sx={{ fontWeight: 800, color: corDestaque, fontSize: '1.1rem' }}>
-                    {index + 1}º
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                      {resultado.pesquisador_responsavel}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                      {resultado.area_conhecimento}
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {resultado.termos_explicativos.map((termo, i) => (
-                        <Chip 
-                          key={i} 
-                          label={termo} 
-                          size="small" 
-                          variant="outlined"
-                          sx={{ fontSize: '0.65rem', height: '20px' }} 
-                        />
-                      ))}
-                    </Box>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Chip 
-                      label={`${(resultado.score * 100).toFixed(1)}%`}
-                      color={resultado.score > 0.4 ? 'success' : 'warning'}
-                      size="small"
-                      sx={{ fontWeight: 'bold' }}
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
-                      <Button 
-                        size="small" 
-                        variant={isPrimary ? "contained" : "outlined"} 
-                        color={isPrimary ? "primary" : "inherit"}
-                        onClick={() => setExpertiseSelecionada(resultado.expertise_id)}
-                        sx={{ fontSize: '0.65rem', py: 0.2, minWidth: '70px' }}
-                      >
-                        Portfolio
-                      </Button>
-                      {resultado.link_lattes && (
-                        <Link 
-                          href={resultado.link_lattes} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5 }}
-                        >
-                          Lattes <LaunchIcon sx={{ fontSize: '0.7rem' }} />
-                        </Link>
-                      )}
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      ) : (
-        <Typography textAlign="center" color="text.secondary" sx={{ py: 4 }}>
-          Nenhum match encontrado.
-        </Typography>
-      )}
-    </Paper>
-  );
+  const abrirPortfolio = (id) => {
+    setExpertiseSelecionada(id);
+  };
 
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 800, color: 'text.primary', display: 'flex', alignItems: 'center', gap: 2 }}>
-          Motor de Matchmaking <AutoAwesomeIcon color="primary" fontSize="large" />
-        </Typography>
-        <Typography variant="subtitle1" color="text.secondary">
-          Análise comparativa em tempo real: Stemming (NLTK) vs. Lematização (SpaCy)
-        </Typography>
+    <Container maxWidth="xl" sx={{ mt: 3, mb: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 800, color: 'text.primary', display: 'flex', alignItems: 'center', gap: 2, fontSize: isMobile ? '1.5rem' : '2.125rem' }}>
+            Matchmaking Semântico <AutoAwesomeIcon color="primary" fontSize={isMobile ? "medium" : "large"} />
+          </Typography>
+          {!isMobile && (
+            <Typography variant="subtitle1" color="text.secondary">
+              Análise comparativa em tempo real: Stemming (NLTK) vs. Lematização (SpaCy)
+            </Typography>
+          )}
+        </Box>
+        <IconButton onClick={() => setOpenHelp(true)} sx={{ borderRadius: 1, border: '1px solid', borderColor: 'divider', width: '48px', height: '48px' }}>
+          <HelpIcon />
+        </IconButton>
       </Box>
 
       {mensagem.texto && (
-        <Alert severity={mensagem.tipo} sx={{ mb: 3 }} onClose={() => setMensagem({ texto: '', tipo: 'info' })}>
+        <Alert severity={mensagem.tipo} sx={{ mb: 3, flexShrink: 0 }} onClose={() => setMensagem({ texto: '', tipo: 'info' })}>
           {mensagem.texto}
         </Alert>
       )}
 
-      <Paper sx={{ p: 3, mb: 4, backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+      <Paper sx={{ p: isMobile ? 2 : 3, mb: 4, backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 2 }}>
         <Box component="form" onSubmit={gerarRanking}>
           <Grid container spacing={2} alignItems="flex-start">
             <Grid item xs={12} md={9}>
               <FormControl fullWidth required sx={{ backgroundColor: 'white' }}>
-                <InputLabel>Selecione o Problema / Demanda (Governo/Indústria)</InputLabel>
+                <InputLabel>Selecione a Demanda (Governo/Indústria)</InputLabel>
                 <Select
                   value={demandaSelecionada}
-                  label="Selecione o Problema / Demanda (Governo/Indústria)"
+                  label="Selecione a Demanda (Governo/Indústria)"
                   onChange={(e) => setDemandaSelecionada(e.target.value)}
                 >
                   <MenuItem value="" disabled>Escolha uma demanda na base de dados...</MenuItem>
@@ -214,7 +135,7 @@ const TelaMatchmaking = () => {
                 disabled={carregando}
                 sx={{ height: '56px', fontWeight: 'bold', fontSize: '1rem' }}
               >
-                {carregando ? <CircularProgress size={28} color="inherit" /> : 'Executar Modelos IA'}
+                {carregando ? <CircularProgress size={28} color="inherit" /> : 'Executar Análise'}
               </Button>
             </Grid>
           </Grid>
@@ -222,12 +143,23 @@ const TelaMatchmaking = () => {
       </Paper>
 
       {resultados && (
-        <Grid container spacing={3}>
+        <Grid container spacing={3} sx={{ flexGrow: 1 }}>
           <Grid item xs={12} md={6}>
-            {renderTabela('Abordagem 1: Stemming (NLTK)', resultados.stemming, '#0ea5e9')}
+            <TabelaRanking 
+              titulo="Abordagem 1: Stemming (NLTK)" 
+              metricas={resultados.stemming} 
+              corDestaque="#0ea5e9" 
+              aoAbrirPortfolio={abrirPortfolio}
+            />
           </Grid>
           <Grid item xs={12} md={6}>
-            {renderTabela('Abordagem 2: Lematização (SpaCy)', resultados.lematizacao, '#10b981', true)}
+            <TabelaRanking 
+              titulo="Abordagem 2: Lematização (SpaCy)" 
+              metricas={resultados.lematizacao} 
+              corDestaque="#10b981" 
+              isPrimary={true} 
+              aoAbrirPortfolio={abrirPortfolio}
+            />
           </Grid>
         </Grid>
       )}
@@ -237,15 +169,51 @@ const TelaMatchmaking = () => {
         onClose={() => setExpertiseSelecionada(null)}
         maxWidth="md"
         fullWidth
-        PaperProps={{ sx: { height: '80vh', borderRadius: 2 } }}
+        fullScreen={isMobile}
+        PaperProps={{ sx: { height: isMobile ? '100%' : '80vh', borderRadius: isMobile ? 0 : 2 } }}
       >
-        {expertiseSelecionada && (
-          <GestaoPortfolio 
-            expertiseId={expertiseSelecionada} 
-            onClose={() => setExpertiseSelecionada(null)}
-            onAtualizar={() => {}}
-          />
+        {isMobile && (
+          <DialogTitle sx={{ bgcolor: 'primary.main', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            Portfólio do Investigador
+            <Button onClick={() => setExpertiseSelecionada(null)} color="inherit">Fechar</Button>
+          </DialogTitle>
         )}
+        <DialogContent sx={{ p: 0 }}>
+          {expertiseSelecionada && (
+            <GestaoPortfolio 
+              expertiseId={expertiseSelecionada} 
+              onClose={() => setExpertiseSelecionada(null)}
+              onAtualizar={() => {}}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openHelp} onClose={() => setOpenHelp(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 700, color: 'primary.main' }}>
+          Sobre o Matchmaking Semântico
+        </DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body1" paragraph>
+            Este motor utiliza Processamento de Linguagem Natural (PLN) para reduzir a assimetria de informação entre os atores da Tríplice Hélice.
+          </Typography>
+          <Box component="ul" sx={{ pl: 2, mb: 2, typography: 'body2', color: 'text.secondary' }}>
+            <li style={{ marginBottom: '8px' }}>
+              <strong>Stemming (NLTK):</strong> Abordagem mais rápida que reduz as palavras aos seus radicais (ex: "pesquisando" vira "pesquis").
+            </li>
+            <li style={{ marginBottom: '8px' }}>
+              <strong>Lematização (SpaCy):</strong> Abordagem morfológica que identifica a raiz canônica das palavras (ex: "fui" vira "ir"), sendo geralmente mais precisa para o português.
+            </li>
+          </Box>
+          <Alert severity="info" sx={{ mt: 2 }}>
+            <strong>Score de Similaridade:</strong> Representa a interseção vetorial entre a descrição da demanda e o histórico do investigador. Scores acima de 40% indicam forte potencial de colaboração.
+          </Alert>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 1 }}>
+          <Button onClick={() => setOpenHelp(false)} variant="contained" disableElevation>
+            Entendido
+          </Button>
+        </DialogActions>
       </Dialog>
     </Container>
   );
