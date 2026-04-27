@@ -48,20 +48,48 @@ const SetupRoute = ({ children }) => {
 const App = () => {
 
   useEffect(() => {
+    let timeoutId;
+    const TEMPO_INATIVIDADE = 60 * 60 * 1000;
+
+    const logout = () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        localStorage.removeItem('token');
+        alert('Sua sessão expirou por tempo de inatividade. Por favor, faça login novamente.');
+        window.location.href = '/login';
+      }
+    };
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(logout, TEMPO_INATIVIDADE);
+    };
+
     const vigiaSessao = setInterval(() => {
       const usuario = getUsuarioLogado();
       if (usuario && usuario.exp) {
         const dataAtual = Math.floor(Date.now() / 1000); 
-        
         if (usuario.exp < dataAtual) {
-          localStorage.removeItem('token');
-          alert('Sua sessão expirou por tempo de inatividade. Por favor, faça login novamente.');
-          window.location.href = '/login';
+          logout();
         }
       }
     }, 10000);
 
-    return () => clearInterval(vigiaSessao);
+    window.addEventListener('mousemove', resetTimer);
+    window.addEventListener('keydown', resetTimer);
+    window.addEventListener('click', resetTimer);
+    window.addEventListener('scroll', resetTimer);
+
+    resetTimer();
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(vigiaSessao);
+      window.removeEventListener('mousemove', resetTimer);
+      window.removeEventListener('keydown', resetTimer);
+      window.removeEventListener('click', resetTimer);
+      window.removeEventListener('scroll', resetTimer);
+    };
   }, []);
 
   return (

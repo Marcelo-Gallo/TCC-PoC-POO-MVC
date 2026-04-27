@@ -14,7 +14,8 @@ import {
   Divider,
   Alert,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Chip
 } from '@mui/material';
 import {
   Inventory as InventoryIcon,
@@ -75,17 +76,17 @@ const FormularioExpertise = ({
 
       if (expertiseParaEditar) {
         await api.put(`/expertises/${expertiseParaEditar.id}`, payload);
-        setMensagem({ texto: 'Investigador atualizado com sucesso!', tipo: 'success' });
+        setMensagem({ texto: 'Pesquisador atualizado com sucesso!', tipo: 'success' });
       } else {
         await api.post('/expertises', payload);
-        setMensagem({ texto: 'Investigador registrado com sucesso!', tipo: 'success' });
+        setMensagem({ texto: 'Pesquisador registrado com sucesso!', tipo: 'success' });
       }
       limparCampos();
       aoSucesso();
       if (expertiseParaEditar) aoCancelar();
     } catch (error) {
       setMensagem({
-        texto: error.response?.data?.detail || 'Erro ao salvar o investigador.',
+        texto: error.response?.data?.detail || 'Erro ao salvar o Pesquisador.',
         tipo: 'error'
       });
     }
@@ -108,7 +109,7 @@ const FormularioExpertise = ({
           {!isMobile && (
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                {expertiseParaEditar ? 'Editar Investigador' : 'Novo Investigador'}
+                {expertiseParaEditar ? 'Editar Pesquisador' : 'Novo Pesquisador'}
               </Typography>
               <Tooltip title="Sobre este painel">
                 <IconButton size="small" onClick={onOpenHelp}>
@@ -120,7 +121,7 @@ const FormularioExpertise = ({
 
           <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: isMobile ? 1 : 0 }}>
             <TextField
-              label="Nome do Investigador"
+              label="Nome do Pesquisador"
               fullWidth
               value={pesquisadorResponsavel}
               onChange={(e) => setPesquisadorResponsavel(e.target.value)}
@@ -137,8 +138,11 @@ const FormularioExpertise = ({
               >
                 <MenuItem value="" disabled>Selecione a Universidade...</MenuItem>
                 {atores.map(a => (
-                  <MenuItem key={a.id} value={a.id}>
-                    {a.nome} {a.is_deleted ? ' - (ARQUIVADO)' : ''}
+                  <MenuItem key={a.id} value={a.id} sx={{ display: 'flex', gap: 1 }}>
+                    {a.nome}
+                    {a.is_deleted && (
+                      <Chip label="Arquivado" size="small" color="error" variant="outlined" sx={{ height: '20px', fontSize: '0.65rem' }} />
+                    )}
                   </MenuItem>
                 ))}
               </Select>
@@ -172,7 +176,7 @@ const FormularioExpertise = ({
             />
 
             <Button type="submit" variant="contained" color="primary" fullWidth sx={{ height: '48px', mt: 1 }}>
-              {expertiseParaEditar ? 'Salvar Alterações' : 'Cadastrar Investigador'}
+              {expertiseParaEditar ? 'Salvar Alterações' : 'Cadastrar Pesquisador'}
             </Button>
             {expertiseParaEditar && !isMobile && (
               <Button variant="text" color="secondary" onClick={aoCancelar} fullWidth>
@@ -209,7 +213,7 @@ const FormularioExpertise = ({
             Você está visualizando registros inativos. Utilize o ícone de restauração na tabela para reativá-los.
           </Typography>
           <Alert severity="warning" variant="outlined">
-            Investigadores arquivados não aparecem no motor de matchmaking.
+            Pesquisadores arquivados não aparecem no motor de matchmaking.
           </Alert>
         </>
       )}

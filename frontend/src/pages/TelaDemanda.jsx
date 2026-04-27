@@ -61,7 +61,9 @@ const TelaDemanda = () => {
     try {
       const resAtivos = await api.get('/atores');
       const resInativos = await api.get('/atores?mostrar_inativos=true');
-      setAtores([...resAtivos.data, ...resInativos.data]);
+      const todosAtores = [...resAtivos.data, ...resInativos.data];
+      
+      setAtores(todosAtores.filter(a => a.tipo_helice !== 'UNIVERSIDADE'));
     } catch (error) {
       setMensagem({ texto: 'Erro ao carregar os atores para o formulário.', tipo: 'error' });
     }

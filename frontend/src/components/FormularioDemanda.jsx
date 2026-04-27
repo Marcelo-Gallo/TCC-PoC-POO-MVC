@@ -14,7 +14,8 @@ import {
   Divider,
   Alert,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  Chip
 } from '@mui/material';
 import {
   Inventory as InventoryIcon,
@@ -143,8 +144,11 @@ const FormularioDemanda = ({
               >
                 <MenuItem value="" disabled>Selecione um ator...</MenuItem>
                 {atores.map(ator => (
-                  <MenuItem key={ator.id} value={ator.id}>
-                    {ator.nome} ({ator.tipo_helice}) {ator.is_deleted ? ' - (ARQUIVADO)' : ''}
+                  <MenuItem key={ator.id} value={ator.id} sx={{ display: 'flex', gap: 1 }}>
+                    {ator.nome} ({ator.tipo_helice})
+                    {ator.is_deleted && (
+                      <Chip label="Arquivado" size="small" color="error" variant="outlined" sx={{ height: '20px', fontSize: '0.65rem' }} />
+                    )}
                   </MenuItem>
                 ))}
               </Select>

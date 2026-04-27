@@ -23,10 +23,7 @@ import {
   DialogContent,
   DialogActions
 } from '@mui/material';
-import {
-  AutoAwesome as AutoAwesomeIcon,
-  HelpOutline as HelpIcon
-} from '@mui/icons-material';
+import { HelpOutline as HelpIcon } from '@mui/icons-material';
 
 const TelaMatchmaking = () => {
   const theme = useTheme();
@@ -69,7 +66,7 @@ const TelaMatchmaking = () => {
       setResultados(response.data);
       
       if (response.data.stemming.resultados.length === 0 && response.data.lematizacao.resultados.length === 0) {
-        setMensagem({ texto: 'Nenhum investigador compatível encontrado para esta demanda.', tipo: 'warning' });
+        setMensagem({ texto: 'Nenhum pesquisador compatível encontrado para esta demanda.', tipo: 'warning' });
       }
     } catch (error) {
       setMensagem({ texto: error.response?.data?.detail || 'Erro ao processar o algoritmo de similaridade.', tipo: 'error' });
@@ -84,22 +81,7 @@ const TelaMatchmaking = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 3, mb: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 800, color: 'text.primary', display: 'flex', alignItems: 'center', gap: 2, fontSize: isMobile ? '1.5rem' : '2.125rem' }}>
-            Matchmaking Semântico <AutoAwesomeIcon color="primary" fontSize={isMobile ? "medium" : "large"} />
-          </Typography>
-          {!isMobile && (
-            <Typography variant="subtitle1" color="text.secondary">
-              Análise comparativa em tempo real: Stemming (NLTK) vs. Lematização (SpaCy)
-            </Typography>
-          )}
-        </Box>
-        <IconButton onClick={() => setOpenHelp(true)} sx={{ borderRadius: 1, border: '1px solid', borderColor: 'divider', width: '48px', height: '48px' }}>
-          <HelpIcon />
-        </IconButton>
-      </Box>
-
+      
       {mensagem.texto && (
         <Alert severity={mensagem.tipo} sx={{ mb: 3, flexShrink: 0 }} onClose={() => setMensagem({ texto: '', tipo: 'info' })}>
           {mensagem.texto}
@@ -127,16 +109,33 @@ const TelaMatchmaking = () => {
               </FormControl>
             </Grid>
             <Grid item xs={12} md={3}>
-              <Button 
-                type="submit" 
-                variant="contained" 
-                color="primary" 
-                fullWidth 
-                disabled={carregando}
-                sx={{ height: '56px', fontWeight: 'bold', fontSize: '1rem' }}
-              >
-                {carregando ? <CircularProgress size={28} color="inherit" /> : 'Executar Análise'}
-              </Button>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  color="primary" 
+                  fullWidth 
+                  disabled={carregando}
+                  sx={{ height: '56px', fontWeight: 'bold', fontSize: '1rem' }}
+                >
+                  {carregando ? <CircularProgress size={28} color="inherit" /> : 'Executar Análise'}
+                </Button>
+                <IconButton 
+                  onClick={() => setOpenHelp(true)} 
+                  color="primary"
+                  sx={{ 
+                    borderRadius: 1, 
+                    border: '1px solid', 
+                    borderColor: 'divider', 
+                    width: '56px', 
+                    height: '56px',
+                    backgroundColor: 'white'
+                  }}
+                  title="Ajuda sobre o Matchmaking"
+                >
+                  <HelpIcon />
+                </IconButton>
+              </Box>
             </Grid>
           </Grid>
         </Box>
@@ -174,7 +173,7 @@ const TelaMatchmaking = () => {
       >
         {isMobile && (
           <DialogTitle sx={{ bgcolor: 'primary.main', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            Portfólio do Investigador
+            Portfólio do Pesquisador
             <Button onClick={() => setExpertiseSelecionada(null)} color="inherit">Fechar</Button>
           </DialogTitle>
         )}
@@ -206,7 +205,7 @@ const TelaMatchmaking = () => {
             </li>
           </Box>
           <Alert severity="info" sx={{ mt: 2 }}>
-            <strong>Score de Similaridade:</strong> Representa a interseção vetorial entre a descrição da demanda e o histórico do investigador. Scores acima de 40% indicam forte potencial de colaboração.
+            <strong>Score de Similaridade:</strong> Representa a interseção vetorial entre a descrição da demanda e o histórico do Pesquisador. Scores acima de 40% indicam forte potencial de colaboração.
           </Alert>
         </DialogContent>
         <DialogActions sx={{ p: 2, pt: 1 }}>

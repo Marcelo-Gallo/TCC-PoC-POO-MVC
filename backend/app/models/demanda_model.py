@@ -69,8 +69,10 @@ class DemandaModel:
         return dict(result.fetchone()._mapping)
 
     def _verificar_ator_ativo(self, ator_id: int):
-        query = text("SELECT id, is_deleted FROM ator WHERE id = :id")
+        query = text("SELECT id, tipo_helice, is_deleted FROM ator WHERE id = :id")
         result = self.db.execute(query, {"id": ator_id}).fetchone()
         
         if not result or result._mapping["is_deleted"]:
             raise ValueError("Ator vinculado não encontrado ou inativo.")
+        if result._mapping["tipo_helice"].upper() == "UNIVERSIDADE":
+            raise ValueError("Não é permitido cadastrar demandas para atores do tipo UNIVERSIDADE.")

@@ -11,7 +11,7 @@ load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY", "chave_super_secreta_tcc_2026")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -46,7 +46,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         email: str = payload.get("sub")
         nome: str = payload.get("nome")
         is_master: bool = payload.get("is_master", False)
-        primeiro_login: bool = payload.get("primeiro_login", False) # Novo
+        primeiro_login: bool = payload.get("primeiro_login", False)
         
         if email is None:
             raise credentials_exception

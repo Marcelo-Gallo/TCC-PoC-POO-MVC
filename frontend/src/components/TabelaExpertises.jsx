@@ -87,7 +87,7 @@ const TabelaExpertises = ({
                   direction={sortConfig.key === 'pesquisador_responsavel' ? sortConfig.direction : 'asc'} 
                   onClick={() => requestSort('pesquisador_responsavel')}
                 >
-                  Investigador
+                  Pesquisador
                 </TableSortLabel>
               </TableCell>
               <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f8fafc', display: { xs: 'none', sm: 'table-cell' } }}>
