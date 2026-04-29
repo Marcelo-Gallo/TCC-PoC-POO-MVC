@@ -1,42 +1,92 @@
-# Plataforma de Corretagem Digital de Inovação - Tríplice Hélice
+# 🧬 InovaHelix: Matchmaking Semântico para a Tríplice Hélice Municipal
 
-## Visão Geral
-Este projeto consiste em uma Prova de Conceito (PoC) desenvolvida para validar a aplicação de Processamento de Linguagem Natural (NLP) no ecossistema de inovação da Tríplice Hélice (Universidade, Indústria e Governo). A plataforma atua como um motor de matchmaking, cruzando problemas técnicos (demandas) com soluções acadêmicas (expertises e portfólios) por meio do cálculo de Similaridade de Cosseno sobre matrizes TF-IDF.
+![Status](https://img.shields.io/badge/Status-Concluído-green)
+![Python](https://img.shields.io/badge/Python-3%2E10--Slim-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-ASGI-009688)
+![React](https://img.shields.io/badge/React-Frontend-61DAFB)
+![Docker](https://img.shields.io/badge/Docker-Conteinerizado-2496ED)
 
-## Arquitetura
-O sistema é composto por três contêineres principais orquestrados via Docker:
-* Banco de Dados: PostgreSQL.
-* Backend: API RESTful desenvolvida em Python (FastAPI).
-* Frontend: Interface de Usuário desenvolvida em React.
+> Trabalho de Conclusão de Curso (Bacharelado em Sistemas de Informação) apresentado ao Instituto Federal de Educação, Ciência e Tecnologia de São Paulo (IFSP) - Campus Votuporanga.
 
+## 📖 Sobre o Projeto
+O Brasil enfrenta um cenário de engessamento na gestão pública que resulta na Paralisia da Inovação municipal. Embora o modelo da Tríplice Hélice proponha a integração entre Universidade, Indústria e Governo, essa colaboração esbarra na assimetria de informações. 
+
+Este projeto é uma Prova de Conceito (PoC) desenvolvida sob o padrão MVC e arquitetura API-First. Ele atua como um **corretor digital de inovação**. Através de Processamento de Linguagem Natural (NLP), o sistema automatiza o *matchmaking* (correlação semântica) entre as demandas da gestão pública/indústria e os pesquisadores acadêmicos por meio de seus portfólios.
+
+## 🛠️ Tecnologias e Arquitetura
+
+O ecossistema foi construído visando alta coesão e baixo acoplamento, sendo totalmente conteinerizado:
+* **Backend / IA:** Python com FastAPI (Padrão ASGI). Rotinas de NLP utilizando NLTK (Stemming) e spaCy (Lematização).
+* **Frontend:** React. Comunicação segura via JWT (JSON Web Tokens).
+* **Banco de Dados:** PostgreSQL, garantindo integridade referencial e transacional (Propriedades ACID).
+* **Infraestrutura:** Docker e Docker Compose para orquestração dos serviços.
+
+## ⚙️ Variáveis de Ambiente (.env)
+
+Para a execução do projeto será necessário um arquivo `.env` na raiz do repositório baseado na estrutura abaixo. Este arquivo orquestra as portas e credenciais tanto do Banco de Dados quanto do envio de e-mails para recuperação de senhas.
+
+```env
+# Credenciais do Banco de Dados
+POSTGRES_USER=admin
+POSTGRES_PASSWORD=sua_senha_segura
+POSTGRES_DB=inovahelix_db
+
+# Configuração de Portas (Docker)
+DB_PORT=5432
+BACKEND_PORT=8000
+FRONTEND_PORT=3000
+
+# String de Conexão utilizada pelo SQLAlchemy no Backend
+DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${DB_PORT}/${POSTGRES_DB}
+
+# Variáveis para Deploy (Ex: AWS, Nginx, API Gateway)
+# Descomente e ajuste as linhas abaixo APENAS em ambiente de produção
+# ROOT_PATH=/api
+# REACT_APP_API_URL=/api
+
+# Credenciais de E-mail (SMTP para recuperação de credenciais)
+MAIL_USERNAME=seu_email@gmail.com
+MAIL_PASSWORD=sua_senha_de_app
+MAIL_FROM=seu_email@gmail.com
+MAIL_PORT=587
+MAIL_SERVER=smtp.gmail.com
+MAIL_STARTTLS=True
+MAIL_SSL_TLS=False
+```
+### 🚀 Como Executar o Projeto Localmente
 ## Pré-requisitos
-Para executar este projeto em um ambiente Linux Mint (ou distribuições baseadas em Debian/Ubuntu), certifique-se de que as seguintes ferramentas estejam instaladas:
-* Docker
-* Docker Compose (Plugin)
+Certifique-se de ter o Docker e o Docker Compose instalados em sua máquina.
 
-## Instruções de Execução
+## Passo a Passo
+1. Clone este repositório:
+```Bash
+git clone https://github.com/Marcelo-Gallo/TCC-PoC-POO-MVC.git
+cd TCC-PoC-POO-MVC
+```
 
-1. Abra o terminal na raiz do projeto, onde o arquivo `docker-compose.yml` está localizado.
+2. Configure o .env:
+Crie o arquivo .env na raiz do projeto contendo as variáveis listadas na seção anterior.
 
-2. Execute o comando abaixo para construir as imagens e iniciar os contêineres em segundo plano:
-   ```bash
-   docker compose up --build -d
-Para acompanhar os registros (logs) e verificar se o algoritmo de NLP e o servidor foram inicializados corretamente, utilize:
+3. Inicie os containers:
+Na raiz do projeto, execute o comando abaixo. O Docker se encarregará de baixar as imagens do Postgres, do Python e do Node, montando o ecossistema automaticamente:
 
-Bash
-docker compose logs -f
-Para interromper a execução do sistema, utilize o comando:
+```Bash
+docker-compose up -d --build
+```
+4. Acesso ao Sistema:
 
-Bash
-docker compose down
-Acessos do Sistema
-Após a inicialização completa dos contêineres, os serviços estarão disponíveis nos seguintes endereços locais:
+- Frontend (Interface React): Acesse http://localhost:3000
 
-Frontend (Interface do Gestor): http://localhost:3000
+- Backend (Swagger UI interativo): Acesse http://localhost:8000/docs
 
-Backend (Documentação Swagger/OpenAPI): http://localhost:8000/docs
+_💡 Nota: No primeiro acesso, o sistema executará um seed automático no banco de dados, criando a primeira conta de "Gestor Master" para que você possa fazer o login e explorar o módulo de Matchmaking._
 
-Banco de Dados (PostgreSQL): localhost:5432 (Acesso via DBeaver, pgAdmin ou terminal local).
+### 📚 Referências Acadêmicas Destaque
+- ETZKOWITZ, Henry; LEYDESDORFF, Loet. The Triple Helix: university-industry-government relations: a laboratory for knowledge based economic development.
 
-Observações de Teste
-Para o primeiro acesso à plataforma, é necessário possuir um usuário Gestor cadastrado na base de dados. Como a API exige autenticação JWT para as operações de escrita, recomenda-se a inserção de um usuário inicial diretamente no PostgreSQL para viabilizar o login na interface.
+- BAEZA-YATES, Ricardo; RIBEIRO-NETO, Berthier. Modern information retrieval.
+
+### 👨‍💻 Autor
+Marcelo Augusto Godoi Gallo <br/>
+Bacharelado em Sistemas de Informação - IFSP <br/>
+Orientador: Prof. Dr. Marcelo Luis Murari
